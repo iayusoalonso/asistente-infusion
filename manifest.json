@@ -2,7 +2,8 @@
   "name": "Asistente de Infusión",
   "short_name": "Asistente",
   "description": "Guía interactiva offline con temporizadores y control por voz.",
-  "start_url": "./index.html",
+  "start_url": "/asistente-infusion/",
+  "scope": "/asistente-infusion/"
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#1f1f1f",
