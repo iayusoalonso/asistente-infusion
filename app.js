@@ -25,7 +25,7 @@ function updateOnlineStatus() {
     }
 }
 
-// Enrutador
+// Enrutador de vistas
 const router = {
     current: 'menu',
     go(viewId) {
@@ -47,7 +47,7 @@ const router = {
     }
 };
 
-// Gestor de Procedimientos
+// Gestor de Procedimientos (CRUD y DOM)
 const routineManager = {
     storageKey: 'infusion_routines_modular_v1',
     routines: [],
@@ -138,7 +138,6 @@ const routineManager = {
                 ${controlSection}
             `;
             
-            // Asignación manual de eventos seguros para evitar inline dinámicos
             item.querySelector('.routine-info').onclick = () => { if(!this.isReorderMode) engine.setup(r.id); };
             if(!this.isReorderMode) {
                 item.querySelectorAll('.btn-action')[0].onclick = () => this.edit(r.id);
@@ -184,7 +183,6 @@ const routineManager = {
             </div>
         `;
 
-        // Eventos enriquecidos con prevención de pérdida de foco
         const richInput = row.querySelector('.step-text-rich');
         const binds = [
             { c: '.btn-bold', cmd: 'bold', val: null },
@@ -260,7 +258,7 @@ const routineManager = {
     }
 };
 
-// Motor de Ejecución
+// Motor de Ejecución y Cronómetros
 const engine = {
     activeRoutine: null,
     currentStepIndex: 0,
@@ -371,7 +369,7 @@ const engine = {
     }
 };
 
-// Eventos de Inicialización de la Interfaz
+// Inicialización general e interceptores de la interfaz
 window.addEventListener('DOMContentLoaded', () => {
     translateUI();
     routineManager.init();
@@ -394,4 +392,11 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('reorderMenuBtn').onclick = () => routineManager.toggleReorderMode();
     document.getElementById('netStatusDot').onclick = () => document.getElementById('netStatusText').classList.toggle('hidden');
     document.getElementById('actionBtn').onclick = () => { setWakeLock(true); engine.handleElbowClick(); };
+
+    // Registro del Service Worker para soporte PWA y modo offline completo en GitHub Pages
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log('Service Worker Activo'))
+            .catch(err => console.error('Error al registrar SW:', err));
+    }
 });

@@ -1,11 +1,16 @@
-const CACHE_NAME = 'asistente-v1';
+const CACHE_NAME = 'infusion-app-v2';
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json'
+  './style.css',
+  './app.js',
+  './i18n.js',
+  './manifest.json',
+  // Cacheamos también la librería de pantalla activa para garantizar el modo offline
+  'https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js'
 ];
 
-// Instala el Service Worker y almacena en caché los archivos
+// Instalar el Service Worker y guardar archivos en caché
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -14,7 +19,7 @@ self.addEventListener('install', (e) => {
   );
 });
 
-// Activa el Service Worker y limpia cachés antiguas si las hubiera
+// Limpiar cachés antiguas
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -29,7 +34,7 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Intercepta las peticiones para que la app funcione 100% offline
+// Interceptación de peticiones para trabajar en offline
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
