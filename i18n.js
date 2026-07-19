@@ -1,5 +1,3 @@
-// i18n.js — versión ES6 módulo
-
 export const translations = {
     es: {
         no_routines: "No hay rutinas guardadas.",
