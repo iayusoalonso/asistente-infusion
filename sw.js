@@ -11,19 +11,14 @@ const ASSETS = [
   '/asistente-infusion/icon-512.png'
 ];
 
-// --- INSTALACIÓN ---
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(ASSETS))
-      .then(() => {
-        // No activamos aún: esperamos a que el usuario cierre la app
-        return self.skipWaiting();
-      })
+      .then(() => self.skipWaiting())
   );
 });
 
-// --- ACTIVACIÓN ---
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -36,14 +31,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// --- FETCH ---
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cached) => {
       return (
         cached ||
         fetch(event.request).catch(() => {
-          // Offline: si no está en caché, devuelve index.html
           return caches.match('/asistente-infusion/index.html');
         })
       );
@@ -51,7 +44,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// --- AVISO DE NUEVA VERSIÓN ---
+// Para actualización automática segura
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') {
     self.skipWaiting();
