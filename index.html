@@ -9,699 +9,89 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
 
-    <!-- Script para prevenir el bloqueo de pantalla en segundo plano de forma silenciosa -->
+    <!-- Prevención de bloqueo de pantalla -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
-
-    <style>
-        :root {
-            --bg-color: #f4f6f9;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --primary: #2563eb;
-            --primary-active: #1d4ed8;
-            --success: #10b981;
-            --danger: #ef4444;
-            --sterile-bg: #fee2e2;
-            --sterile-text: #991b1b;
-            --border: #e2e8f0;
-            --font-stack: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: var(--font-stack);
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 16px;
-        }
-
-        .hidden { display: none !important; }
-
-        /* Cabecera ultra limpia */
-        .app-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-            margin-bottom: 16px;
-            min-height: 56px;
-        }
-
-        .btn-nav {
-            background: var(--bg-color);
-            border: 1px solid var(--border);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            color: var(--text-main);
-        }
-
-        .status-indicators {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin-left: auto;
-        }
-
-        .status-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            box-shadow: 0 0 0 4px rgba(0,0,0,0.02);
-        }
-
-        .status-text-explanation {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            background: var(--bg-color);
-            padding: 6px 10px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            max-width: 200px;
-            text-align: right;
-        }
-
-        .main-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            max-width: 600px;
-            width: 100%;
-            margin: 0 auto;
-            gap: 16px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Banner de Paso Estéril */
-        .sterile-banner {
-            background-color: var(--danger);
-            color: white;
-            text-align: center;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            letter-spacing: 0.5px;
-            animation: pulse-sterile 2s infinite;
-        }
-
-        @keyframes pulse-sterile {
-            0% { opacity: 1; }
-            50% { opacity: 0.85; }
-            100% { opacity: 1; }
-        }
-
-        /* Vista 1: Menú Principal */
-        .routine-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
-        .routine-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px;
-            background: var(--bg-color);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            gap: 8px;
-        }
-        .routine-info { cursor: pointer; flex: 1; }
-        .routine-name { font-weight: 700; font-size: 1.1rem; }
-        .routine-meta { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
-
-        .btn-action { padding: 10px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-secondary { background: #e2e8f0; color: var(--text-main); }
-        .btn-active-reorder { background: #bbf7d0; color: #166534; border: 1px solid #86efac; }
-        .btn-danger-ui { background: #fee2e2; color: var(--danger); }
-
-        /* Vista 2: Creador de Rutinas */
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
-        .form-control { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; }
-        
-        /* Fila de Paso Expandida */
-        .step-row {
-            background: var(--bg-color);
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        /* Barra de herramientas editor de texto */
-        .editor-toolbar {
-            display: flex;
-            gap: 4px;
-            background: #e2e8f0;
-            padding: 4px;
-            border-radius: 8px 8px 0 0;
-            border: 1px solid var(--border);
-            border-bottom: none;
-        }
-        .editor-toolbar button {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 4px 10px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            cursor: pointer;
-            height: 32px;
-            min-width: 32px;
-        }
-        .editor-toolbar button:active { background: #f1f5f9; }
-
-        /* Caja de texto enriquecido enriquecida */
-        .step-text-container {
-            display: flex;
-            flex-direction: column;
-        }
-        .step-text-rich {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 0 0 8px 8px;
-            padding: 12px;
-            min-height: 80px;
-            max-height: 200px;
-            overflow-y: auto;
-            font-size: 1rem;
-            line-height: 1.4;
-            outline: none;
-        }
-        /* Mapeo de tamaños customizados para las etiquetas del editor */
-        .step-text-rich font[size="5"] { font-size: 1.35rem; font-weight: 600; }
-        .step-text-rich font[size="3"] { font-size: 1rem; font-weight: normal; }
-
-        .step-row-inputs-bottom {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .step-row-modifiers {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            font-size: 0.9rem;
-            font-weight: 600;
-            width: 100%;
-            margin-top: 4px;
-            border-top: 1px dashed var(--border);
-            padding-top: 8px;
-        }
-
-        /* Vista 3: Ejecución */
-        .display-card {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            flex: 1;
-            min-height: 240px;
-        }
-        .step-indicator { font-size: 1rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; }
-        .instruction-text { font-size: 1.6rem; font-weight: 700; line-height: 1.3; margin-bottom: 12px; }
-        .instruction-text font[size="5"] { font-size: 2.1rem; font-weight: 800; display: block; margin: 6px 0; }
-        .instruction-text font[size="3"] { font-size: 1.6rem; font-weight: 700; }
-        
-        .volume-helper {
-            background: #eff6ff;
-            color: #1e40af;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            display: inline-block;
-            margin: 8px auto;
-        }
-
-        .timer-display { font-size: 5rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 12px 0; }
-
-        /* Botón de Codo */
-        .elbow-btn {
-            width: 100%;
-            min-height: 140px;
-            background: var(--primary);
-            color: #ffffff;
-            border: none;
-            border-radius: 24px;
-            font-size: 1.6rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: background 0.1s, transform 0.05s;
-            box-shadow: 0 8px 0px var(--primary-active), 0 12px 20px rgba(37, 99, 235, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            user-select: none;
-        }
-        .elbow-btn:active {
-            transform: translateY(6px);
-            box-shadow: 0 2px 0px var(--primary-active), 0 4px 10px rgba(37, 99, 235, 0.2);
-        }
-        .elbow-btn.btn-success {
-            background: var(--success);
-            box-shadow: 0 8px 0px #047857, 0 12px 20px rgba(16, 185, 129, 0.3);
-        }
-    </style>
+    
+    <!-- Estilos independientes -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header class="app-header">
-        <button id="headerNavBtn" class="btn-nav hidden" onclick="router.go('menu')">← Volver</button>
+        <button id="headerNavBtn" class="btn-nav hidden">←</button>
+        
+        <!-- Selector de Idioma -->
+        <div class="lang-selector-container">
+            <select id="langSelector" class="form-control" style="padding: 6px 12px; width: auto; font-size: 0.9rem;">
+                <option value="es">Español 🇪🇸</option>
+                <option value="en">English 🇬🇧</option>
+            </select>
+        </div>
+
         <div class="status-indicators">
             <span id="netStatusText" class="status-text-explanation hidden"></span>
-            <div id="netStatusDot" class="status-dot" onclick="toggleNetExplanation()"></div>
+            <div id="netStatusDot" class="status-dot"></div>
         </div>
     </header>
 
     <main class="main-container">
 
-        <!-- 1. VISTA: MENÚ PRINCIPAL -->
+        <!-- VISTA 1: MENÚ PRINCIPAL -->
         <section id="view-menu" class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                <h2>Procedimientos</h2>
+            <div class="menu-header-row">
+                <h2 data-i18n="menu_title">Procedimientos</h2>
                 <div style="display: flex; gap: 6px;">
-                    <button id="reorderMenuBtn" class="btn-action btn-secondary" onclick="routineManager.toggleReorderMode()">↕️ Organizar</button>
-                    <button class="btn-action btn-primary" onclick="router.go('creator')">+ Nuevo</button>
+                    <button id="reorderMenuBtn" class="btn-action btn-secondary" data-i18n="btn_organize">↕️ Organizar</button>
+                    <button id="btnNewRoutine" class="btn-action btn-primary" data-i18n="btn_new">+ Nuevo</button>
                 </div>
             </div>
             <div id="menu-routines-container" class="routine-list"></div>
         </section>
 
-        <!-- 2. VISTA: CREADOR / EDITOR DE RUTINAS -->
+        <!-- VISTA 2: CREADOR / EDITOR DE RUTINAS -->
         <section id="view-creator" class="card hidden">
-            <h2 style="margin-bottom: 16px;">Configurar Rutina</h2>
+            <h2 id="creatorTitle" style="margin-bottom: 16px;" data-i18n="creator_title_new">Configurar Rutina</h2>
+            
             <div class="form-group">
-                <label for="routineName">Nombre del Proceso</label>
-                <input type="text" id="routineName" class="form-control" placeholder="Ej. Perfusión de Medicación X">
+                <label for="routineName" data-i18n="label_process_name">Nombre del Proceso</label>
+                <input type="text" id="routineName" class="form-control" placeholder="...">
             </div>
             
             <div class="form-group">
-                <label>Pasos Técnicos</label>
+                <label data-i18n="label_technical_steps">Pasos Técnicos</label>
                 <div id="stepsBuilderContainer"></div>
-                <button type="button" class="btn-action" style="background:#e2e8f0; width:100%; margin-top:8px;" onclick="routineManager.addStepRow()">
+                <button type="button" id="btnAddStepRow" class="btn-action" style="background:#e2e8f0; width:100%; margin-top:8px;" data-i18n="btn_add_step">
                     + Añadir Paso
                 </button>
             </div>
 
             <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button class="btn-action btn-primary" style="flex:1;" onclick="routineManager.save()">Guardar Cambios</button>
-                <button class="btn-action" style="background:#cbd5e1;" onclick="router.go('menu')">Cancelar</button>
+                <button id="btnSaveRoutine" class="btn-action btn-primary" style="flex:1;" data-i18n="btn_save">Guardar Cambios</button>
+                <button id="btnCancelCreator" class="btn-action" style="background:#cbd5e1;" data-i18n="btn_cancel">Cancelar</button>
             </div>
         </section>
 
-        <!-- 3. VISTA: EJECUCIÓN -->
+        <!-- VISTA 3: EJECUCIÓN -->
         <section id="view-execution" class="hidden" style="display:flex; flex-direction:column; flex:1; gap:16px;">
-            <div id="sterileBanner" class="sterile-banner hidden">⚠️ ATENCIÓN: PASO ESTÉRIL ⚠️</div>
+            <div id="sterileBanner" class="sterile-banner hidden" data-i18n="sterile_warning">⚠️ ATENCIÓN: PASO ESTÉRIL ⚠️</div>
             
             <div class="card display-card">
                 <div id="currentStep" class="step-indicator">Paso 0 de 0</div>
-                <h1 id="instruction" class="instruction-text">Cargando instrucción...</h1>
+                <h1 id="instruction" class="instruction-text">Cargando...</h1>
                 
                 <div id="volumeContainer" class="volume-helper hidden">
-                    Infundido: <span id="volCurrent">0.0</span> ml de <span id="volTotal">0</span> ml
+                    <span data-i18n="volume_infused">Infundido:</span> 
+                    <span id="volCurrent">0.0</span> ml de <span id="volTotal">0</span> ml
                 </div>
 
                 <div id="timer" class="timer-display">00:00</div>
             </div>
-            <button id="actionBtn" class="elbow-btn" type="button">Iniciar</button>
+            <button id="actionBtn" class="elbow-btn" type="button" data-i18n="btn_start">Iniciar</button>
         </section>
 
     </main>
 
-    <script>
-        // --- Gestión silenciosa del WakeLock (Pantalla Activa) ---
-        const noSleepInstance = new NoSleep();
-        let wakeLockActive = false;
-
-        function setWakeLock(enable) {
-            if (enable && !wakeLockActive) {
-                noSleepInstance.enable();
-                wakeLockActive = true;
-            } else if (!enable && wakeLockActive) {
-                noSleepInstance.disable();
-                wakeLockActive = false;
-            }
-        }
-
-        // --- Conectividad (Punto Dinámico con texto On-Demand) ---
-        function updateOnlineStatus() {
-            const dot = document.getElementById('netStatusDot');
-            const textEx = document.getElementById('netStatusText');
-            
-            if (navigator.onLine) {
-                dot.style.backgroundColor = "var(--success)";
-                textEx.textContent = "Dispositivo Conectado (Online).";
-            } else {
-                dot.style.backgroundColor = "var(--danger)";
-                textEx.textContent = "Sin red (Offline). Uso local garantizado.";
-            }
-        }
-        
-        function toggleNetExplanation() {
-            document.getElementById('netStatusText').classList.toggle('hidden');
-        }
-
-        window.addEventListener('online', updateOnlineStatus);
-        window.addEventListener('offline', updateOnlineStatus);
-
-        // --- ENRUTADOR ---
-        const router = {
-            current: 'menu',
-            go(viewId) {
-                this.current = viewId;
-                document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
-                document.getElementById(`view-${viewId}`).classList.remove('hidden');
-                
-                const navBtn = document.getElementById('headerNavBtn');
-                if (viewId === 'menu') {
-                    navBtn.classList.add('hidden');
-                    engine.stop();
-                    setWakeLock(false);
-                    routineManager.isReorderMode = false;
-                    document.getElementById('reorderMenuBtn').classList.remove('btn-active-reorder');
-                    routineManager.renderMenu();
-                } else {
-                    navBtn.classList.remove('hidden');
-                }
-            }
-        };
-
-        // --- GESTIÓN DE DATOS ---
-        const routineManager = {
-            storageKey: 'infusion_routines_github_v5',
-            routines: [],
-            isReorderMode: false,
-            
-            init() {
-                updateOnlineStatus();
-                const data = localStorage.getItem(this.storageKey);
-                if (data) {
-                    this.routines = JSON.parse(data);
-                } else {
-                    this.routines = [{
-                        id: 'demo-infusion',
-                        name: 'Procedimiento Completo de Muestra',
-                        steps: [
-                            { text: 'Apertura de <b>campo</b> y preparación de vial', time: 20, sterile: true, volume: 0 },
-                            { text: '<font size="5" color="#ef4444">Purgado preventivo</font> del sistema', time: 15, sterile: false, volume: 0 },
-                            { text: 'Infusión guiada activa', time: 60, sterile: false, volume: 250 }
-                        ]
-                    }];
-                    this.persist();
-                }
-                this.renderMenu();
-            },
-            persist() {
-                localStorage.setItem(this.storageKey, JSON.stringify(this.routines));
-            },
-            toggleReorderMode() {
-                this.isReorderMode = !this.isReorderMode;
-                const btn = document.getElementById('reorderMenuBtn');
-                if(this.isReorderMode) {
-                    btn.classList.add('btn-active-reorder');
-                } else {
-                    btn.classList.remove('btn-active-reorder');
-                }
-                this.renderMenu();
-            },
-            moveRoutine(index, direction) {
-                const targetIndex = index + direction;
-                if (targetIndex >= 0 && targetIndex < this.routines.length) {
-                    const temp = this.routines[index];
-                    this.routines[index] = this.routines[targetIndex];
-                    this.routines[targetIndex] = temp;
-                    this.persist();
-                    this.renderMenu();
-                }
-            },
-            renderMenu() {
-                const container = document.getElementById('menu-routines-container');
-                container.innerHTML = '';
-                this.routines.forEach((r, idx) => {
-                    const item = document.createElement('div');
-                    item.className = 'routine-item';
-                    
-                    let controlSection = `<button class="btn-action btn-danger-ui" onclick="routineManager.delete('${r.id}')">Borrar</button>`;
-                    
-                    if(this.isReorderMode) {
-                        controlSection = `
-                            <div style="display:flex; gap:4px;">
-                                <button class="btn-action btn-secondary" style="padding:6px 10px;" onclick="routineManager.moveRoutine(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>↑</button>
-                                <button class="btn-action btn-secondary" style="padding:6px 10px;" onclick="routineManager.moveRoutine(${idx}, 1)" ${idx === this.routines.length - 1 ? 'disabled' : ''}>↓</button>
-                            </div>
-                        `;
-                    }
-
-                    item.innerHTML = `
-                        <div class="routine-info" onclick="if(!routineManager.isReorderMode) engine.setup('${r.id}')">
-                            <div class="routine-name">${r.name}</div>
-                            <div class="routine-meta">${r.steps.length} pasos · Pasos estériles: ${r.steps.some(s=>s.sterile)?'SÍ':'NO'}</div>
-                        </div>
-                        ${controlSection}
-                    `;
-                    container.appendChild(item);
-                });
-            },
-            addStepRow(text = '', time = '', sterile = false, volume = '') {
-                const container = document.getElementById('stepsBuilderContainer');
-                const row = document.createElement('div');
-                row.className = 'step-row';
-                row.innerHTML = `
-                    <div class="step-text-container">
-                        <div class="editor-toolbar">
-                            <button type="button" onmousedown="event.preventDefault(); document.execCommand('bold', false, null);">B</button>
-                            <button type="button" onmousedown="event.preventDefault(); document.execCommand('foreColor', false, '#ef4444');" style="color:#ef4444;">Rojo</button>
-                            <button type="button" onmousedown="event.preventDefault(); document.execCommand('foreColor', false, '#1e293b');" style="color:#1e293b;">Negro</button>
-                            <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '5');">A+</button>
-                            <button type="button" onmousedown="event.preventDefault(); document.execCommand('fontSize', false, '3');">A-</button>
-                        </div>
-                        <div contenteditable="true" class="step-text-rich" placeholder="Escribe la orden aquí...">${text}</div>
-                    </div>
-                    <div class="step-row-inputs-bottom">
-                        <input type="number" class="form-control step-time" placeholder="Seg." value="${time}" style="width: 80px;">
-                        <input type="number" class="form-control step-volume" placeholder="ml" value="${volume}" style="width: 80px;">
-                        
-                        <div style="display:flex; gap:4px; margin-left:auto;">
-                            <button type="button" class="btn-action btn-secondary" style="padding:6px 10px;" onclick="routineManager.moveStepDOM(this, -1)">↑</button>
-                            <button type="button" class="btn-action btn-secondary" style="padding:6px 10px;" onclick="routineManager.moveStepDOM(this, 1)">↓</button>
-                        </div>
-                    </div>
-                    <div class="step-row-modifiers">
-                        <label style="display:flex; align-items:center; gap:6px; color:var(--sterile-text); cursor:pointer; user-select:none;">
-                            <input type="checkbox" class="step-sterile" ${sterile ? 'checked' : ''}> ⚠️ Paso Estéril
-                        </label>
-                        <button type="button" class="btn-action btn-danger-ui" style="padding:4px 8px; margin-left:auto;" onclick="this.parentElement.parentElement.remove()">Eliminar</button>
-                    </div>
-                `;
-                container.appendChild(row);
-            },
-            moveStepDOM(btn, direction) {
-                const row = btn.closest('.step-row');
-                if (direction === -1 && row.previousElementSibling) {
-                    row.parentNode.insertBefore(row, row.previousElementSibling);
-                } else if (direction === 1 && row.nextElementSibling) {
-                    row.parentNode.insertBefore(row.nextElementSibling, row.nextElementSibling.nextElementSibling);
-                }
-            },
-            clearCreatorForm() {
-                document.getElementById('routineName').value = '';
-                document.getElementById('stepsBuilderContainer').innerHTML = '';
-                this.addStepRow();
-            },
-            save() {
-                const name = document.getElementById('routineName').value.trim();
-                if (!name) return alert('Inserta un nombre válido.');
-                
-                const stepRows = document.querySelectorAll('.step-row');
-                const steps = [];
-                
-                stepRows.forEach(row => {
-                    const txt = row.querySelector('.step-text-rich').innerHTML.trim();
-                    const tm = parseInt(row.querySelector('.step-time').value);
-                    const vol = parseInt(row.querySelector('.step-volume').value) || 0;
-                    const isSterile = row.querySelector('.step-sterile').checked;
-                    
-                    if (txt && txt !== '<br>' && tm > 0) {
-                        steps.push({ text: txt, time: tm, sterile: isSterile, volume: vol });
-                    }
-                });
-
-                if (steps.length === 0) return alert('La rutina debe tener al menos un paso válido.');
-
-                this.routines.push({ id: 'routine-' + Date.now(), name: name, steps: steps });
-                this.persist();
-                router.go('menu');
-            },
-            delete(id) {
-                if (confirm('¿Deseas borrar esta rutina?')) {
-                    this.routines = this.routines.filter(r => r.id !== id);
-                    this.persist();
-                    this.renderMenu();
-                }
-            }
-        };
-
-        // --- MOTOR DE EJECUCIÓN ---
-        const engine = {
-            activeRoutine: null,
-            currentStepIndex: 0,
-            timeLeft: 0,
-            totalStepTime: 0,
-            timerInterval: null,
-            state: 'STOPPED',
-
-            setup(routineId) {
-                const routine = routineManager.routines.find(r => r.id === routineId);
-                if (!routine) return;
-                
-                this.activeRoutine = routine;
-                this.currentStepIndex = 0;
-                this.state = 'STOPPED';
-                
-                router.go('execution');
-                this.loadStep();
-                
-                document.getElementById('actionBtn').onclick = () => {
-                    setWakeLock(true);
-                    this.handleElbowClick();
-                };
-            },
-            loadStep() {
-                const step = this.activeRoutine.steps[this.currentStepIndex];
-                this.timeLeft = step.time;
-                this.totalStepTime = step.time;
-                
-                document.getElementById('currentStep').textContent = `Paso ${this.currentStepIndex + 1} de ${this.activeRoutine.steps.length}`;
-                
-                // Renderizado con soporte HTML enriquecido
-                document.getElementById('instruction').innerHTML = step.stepText || step.text;
-                
-                const sterileBanner = document.getElementById('sterileBanner');
-                let voicePrefix = "";
-                if (step.sterile) {
-                    sterileBanner.classList.remove('hidden');
-                    voicePrefix = "Atención, paso estéril. ";
-                } else {
-                    sterileBanner.classList.add('hidden');
-                }
-
-                const volContainer = document.getElementById('volumeContainer');
-                if (step.volume > 0) {
-                    volContainer.classList.remove('hidden');
-                    document.getElementById('volTotal').textContent = step.volume;
-                    document.getElementById('volCurrent').textContent = "0.0";
-                } else {
-                    volContainer.classList.add('hidden');
-                }
-
-                this.updateDisplay();
-                
-                const btn = document.getElementById('actionBtn');
-                btn.textContent = "INICIAR CRONÓMETRO";
-                btn.className = "elbow-btn";
-                
-                if ('speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                    // Limpieza de etiquetas HTML para que la locución de voz sea limpia
-                    const rawText = (step.stepText || step.text).replace(/<\/?[^>]+(>|$)/g, "");
-                    const utterance = new SpeechSynthesisUtterance(voicePrefix + rawText);
-                    window.speechSynthesis.speak(utterance);
-                }
-            },
-            updateDisplay() {
-                const mins = String(Math.floor(this.timeLeft / 60)).padStart(2, '0');
-                const secs = String(this.timeLeft % 60).padStart(2, '0');
-                document.getElementById('timer').textContent = `${mins}:${secs}`;
-
-                const step = this.activeRoutine.steps[this.currentStepIndex];
-                if (step.volume > 0) {
-                    const elapsed = this.totalStepTime - this.timeLeft;
-                    const infused = ((elapsed / this.totalStepTime) * step.volume).toFixed(1);
-                    document.getElementById('volCurrent').textContent = infused;
-                }
-            },
-            handleElbowClick() {
-                const btn = document.getElementById('actionBtn');
-                
-                if (this.state === 'STOPPED') {
-                    this.state = 'RUNNING';
-                    btn.textContent = "PASAR DE PASO (Codo)";
-                    btn.className = "elbow-btn btn-success";
-                    
-                    this.timerInterval = setInterval(() => {
-                        this.timeLeft--;
-                        this.updateDisplay();
-                        
-                        if (this.timeLeft <= 0) {
-                            clearInterval(this.timerInterval);
-                            this.nextStep();
-                        }
-                    }, 1000);
-                } else if (this.state === 'RUNNING') {
-                    clearInterval(this.timerInterval);
-                    this.nextStep();
-                }
-            },
-            nextStep() {
-                this.currentStepIndex++;
-                if (this.currentStepIndex < this.activeRoutine.steps.length) {
-                    this.state = 'STOPPED';
-                    this.loadStep();
-                } else {
-                    this.state = 'STOPPED';
-                    setWakeLock(false);
-                    document.getElementById('sterileBanner').classList.add('hidden');
-                    document.getElementById('volumeContainer').classList.add('hidden');
-                    document.getElementById('instruction').textContent = "¡Procedimiento Finalizado!";
-                    document.getElementById('timer').textContent = "00:00";
-                    
-                    const btn = document.getElementById('actionBtn');
-                    btn.textContent = "VOLVER AL MENÚ";
-                    btn.className = "elbow-btn";
-                    btn.onclick = () => router.go('menu');
-                }
-            },
-            stop() {
-                clearInterval(this.timerInterval);
-                this.state = 'STOPPED';
-                setWakeLock(false);
-            }
-        };
-
-        window.addEventListener('DOMContentLoaded', () => {
-            routineManager.init();
-            routineManager.clearCreatorForm();
-        });
-    </script>
+    <!-- Lógica de la aplicación modular -->
+    <script type="module" src="app.js"></script>
 </body>
 </html>
