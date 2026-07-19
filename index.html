@@ -3,95 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Guía de Infusión Autónoma</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-
-    <!-- Prevención de bloqueo de pantalla -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
-    
-    <!-- Estilos independientes -->
+    <title>Infusion App</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="./vendor/NoSleep.min.js"></script>
 </head>
 <body>
 
-    <header class="app-header">
-        <button id="headerNavBtn" class="btn-nav hidden">←</button>
-        
-        <!-- Selector de Idioma -->
-        <div class="lang-selector-container">
-            <select id="langSelector" class="form-control" style="padding: 6px 12px; width: auto; font-size: 0.9rem;">
-                <option value="es">Español 🇪🇸</option>
-                <option value="en">English 🇬🇧</option>
-            </select>
+    <header>
+        <div class="header-left">
+            <button id="headerNavBtn" class="btn-action btn-secondary hidden">← Volver</button>
         </div>
-
-        <div class="status-indicators">
-            <span id="netStatusText" class="status-text-explanation hidden"></span>
-            <div id="netStatusDot" class="status-dot"></div>
+        <div class="header-right">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div id="netStatusDot" style="width:10px; height:10px; border-radius:50%; background:gray;"></div>
+                <span id="netStatusText" class="hidden" style="font-size:0.8rem;">Online</span>
+            </div>
+            <select id="langSelector">
+                <option value="es">ES</option>
+                <option value="en">EN</option>
+            </select>
         </div>
     </header>
 
-    <main class="main-container">
-
-        <!-- VISTA 1: MENÚ PRINCIPAL -->
-        <section id="view-menu" class="card">
-            <div class="menu-header-row">
-                <h2 data-i18n="menu_title">Procedimientos</h2>
-                <div style="display: flex; gap: 6px;">
-                    <button id="reorderMenuBtn" class="btn-action btn-secondary" data-i18n="btn_organize">↕️ Organizar</button>
-                    <button id="btnNewRoutine" class="btn-action btn-primary" data-i18n="btn_new">+ Nuevo</button>
-                </div>
+    <main>
+        <!-- VISTA MENÚ -->
+        <section id="view-menu">
+            <h1>Mis Procedimientos</h1>
+            <button id="btnNewRoutine" class="btn-action btn-primary" style="width:100%; margin-bottom:20px;">+ Nueva Rutina</button>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button id="reorderMenuBtn" class="btn-action btn-secondary" style="flex:1;">Reordenar Rutinas</button>
+                <button id="btnImportRoutine" class="btn-action btn-secondary" style="flex:1;">Importar archivo</button>
             </div>
-            <div id="menu-routines-container" class="routine-list"></div>
+            <input type="file" id="importFileInput" accept="application/json" class="hidden">
+            <div id="menu-routines-container"></div>
         </section>
 
-        <!-- VISTA 2: CREADOR / EDITOR DE RUTINAS -->
-        <section id="view-creator" class="card hidden">
-            <h2 id="creatorTitle" style="margin-bottom: 16px;" data-i18n="creator_title_new">Configurar Rutina</h2>
-            
-            <div class="form-group">
-                <label for="routineName" data-i18n="label_process_name">Nombre del Proceso</label>
-                <input type="text" id="routineName" class="form-control" placeholder="...">
-            </div>
-            
-            <div class="form-group">
-                <label data-i18n="label_technical_steps">Pasos Técnicos</label>
-                <div id="stepsBuilderContainer"></div>
-                <button type="button" id="btnAddStepRow" class="btn-action" style="background:#e2e8f0; width:100%; margin-top:8px;" data-i18n="btn_add_step">
-                    + Añadir Paso
-                </button>
-            </div>
-
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button id="btnSaveRoutine" class="btn-action btn-primary" style="flex:1;" data-i18n="btn_save">Guardar Cambios</button>
-                <button id="btnCancelCreator" class="btn-action" style="background:#cbd5e1;" data-i18n="btn_cancel">Cancelar</button>
+        <!-- VISTA CREADOR -->
+        <section id="view-creator" class="hidden">
+            <h1 id="creatorTitle">Nueva Rutina</h1>
+            <input type="text" id="routineName" class="form-control" placeholder="Nombre de la rutina" style="width:100%; margin-bottom:20px;">
+            <div id="stepsBuilderContainer"></div>
+            <button id="btnAddStepRow" class="btn-action btn-secondary" style="width:100%; margin-top:10px;">+ Añadir Paso</button>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button id="btnSaveRoutine" class="btn-action btn-primary" style="flex:1;">Guardar</button>
+                <button id="btnCancelCreator" class="btn-action btn-danger-ui" style="flex:1;">Cancelar</button>
             </div>
         </section>
 
-        <!-- VISTA 3: EJECUCIÓN -->
-        <section id="view-execution" class="hidden" style="display:flex; flex-direction:column; flex:1; gap:16px;">
-            <div id="sterileBanner" class="sterile-banner hidden" data-i18n="sterile_warning">⚠️ ATENCIÓN: PASO ESTÉRIL ⚠️</div>
+        <!-- VISTA EJECUCIÓN -->
+        <section id="view-execution" class="hidden">
+            <h2 id="currentStep" style="text-align:center;">Paso 1 / 1</h2>
+            <div id="instruction" style="font-size:1.5rem; text-align:center; padding:20px; border:2px solid #e2e8f0; border-radius:12px; margin:20px 0;"></div>
             
-            <div class="card display-card">
-                <div id="currentStep" class="step-indicator">Paso 0 de 0</div>
-                <h1 id="instruction" class="instruction-text">Cargando...</h1>
+            <div id="sterileBanner" class="hidden" style="background:#fef3c7; color:#92400e; padding:10px; text-align:center; font-weight:bold; border-radius:8px; margin-bottom:10px;">
+                ⚠️ PASO ESTÉRIL
+            </div>
+
+            <div id="timer" style="font-size:4rem; text-align:center; font-weight:bold; margin:20px 0;">00:00</div>
+
+            <!-- Contenedor del volumen con la NUEVA barra de progreso -->
+            <div id="volumeContainer" class="hidden" style="margin-bottom:20px;">
+                <!-- Fallback oculto -->
+                <span id="volCurrent" class="hidden">0.0</span>
+                <span id="volTotal" class="hidden">0</span>
                 
-                <div id="volumeContainer" class="volume-helper hidden">
-                    <span data-i18n="volume_infused">Infundido:</span> 
-                    <span id="volCurrent">0.0</span> ml de <span id="volTotal">0</span> ml
+                <!-- Barra de Progreso Visual -->
+                <div class="progress-wrapper" style="background: #e2e8f0; border-radius: 8px; position: relative; height: 35px; overflow: hidden; border: 1px solid #cbd5e1;">
+                    <div id="volumeProgressBar" style="background: var(--success, #22c55e); width: 0%; height: 100%; transition: width 0.3s linear;"></div>
+                    <div id="volumeProgressText" style="position: absolute; width: 100%; top: 0; left: 0; text-align: center; line-height: 35px; font-weight: bold; color: #1e293b; font-size: 1.1rem;">
+                        0.0 / 0 ml
+                    </div>
                 </div>
-
-                <div id="timer" class="timer-display">00:00</div>
             </div>
-            <button id="actionBtn" class="elbow-btn" type="button" data-i18n="btn_start">Iniciar</button>
-        </section>
 
+            <button id="actionBtn" class="elbow-btn" style="width:100%; padding:25px; font-size:1.5rem;">Iniciar</button>
+        </section>
     </main>
 
-    <!-- Lógica de la aplicación modular -->
     <script type="module" src="app.js"></script>
 </body>
 </html>

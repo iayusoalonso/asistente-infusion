@@ -1,4 +1,4 @@
-const CACHE_NAME = 'infusion-app-v3'; // <--- Cambiado a v3 para forzar actualización
+const CACHE_NAME = 'infusion-app-v6'; // <--- v6: todo local, sin dependencias de CDN
 const ASSETS = [
   './',
   './index.html',
@@ -6,7 +6,9 @@ const ASSETS = [
   './app.js',
   './i18n.js',
   './manifest.json',
-  'https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js'
+  './vendor/NoSleep.min.js',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (e) => {
