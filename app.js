@@ -1,310 +1,306 @@
-// ===============================
-// 🧠 Estado principal de la app
-// ===============================
+// app.js — módulo ES6
+import { t, getLang } from './i18n.js';
+
+const STORAGE_KEY = 'infusion_routines';
+
 const App = {
+  state: {
     routines: [],
-    editingId: null,
-    storageKey: 'infusion-routines-v1',
+    currentRoutine: null,
+    currentView: 'menu'
+  },
 
-    init() {
-        this.load();
-        this.cacheDom();
-        this.bindEvents();
-        this.renderMenu();
-        this.updateOnlineStatus();
-    },
+  init() {
+    this.cacheDOM();
+    this.loadRoutines();
+    this.bindEvents();
+    this.renderMenu();
+    this.updateOnlineStatus();
 
-    cacheDom() {
-        this.views = document.querySelectorAll('[data-view]');
-        this.menuView = document.querySelector('[data-view="menu"]');
-        this.editorView = document.querySelector('[data-view="editor"]');
-        this.runnerView = document.querySelector('[data-view="runner"]');
+    window.addEventListener('online', () => this.updateOnlineStatus());
+    window.addEventListener('offline', () => this.updateOnlineStatus());
+  },
 
-        this.routineNameInput = document.getElementById('routineName');
-        this.stepsContainer = document.getElementById('stepsContainer');
-        this.menuList = document.getElementById('routineList');
-        this.onlineIcon = document.getElementById('onlineIcon');
-        this.newRoutineBtn = document.getElementById('newRoutineBtn');
-        this.saveRoutineBtn = document.getElementById('saveRoutineBtn');
-    },
+  cacheDOM() {
+    this.views = {
+      menu: document.querySelector('[data-view="menu"]'),
+      editor: document.querySelector('[data-view="editor"]'),
+      runner: document.querySelector('[data-view="runner"]')
+    };
 
-    bindEvents() {
-        if (this.newRoutineBtn) {
-            this.newRoutineBtn.addEventListener('click', () => {
-                this.editingId = null;
-                this.openEditor();
-            });
-        }
+    this.onlineIcon = document.getElementById('onlineIcon');
+    this.newRoutineBtn = document.getElementById('newRoutineBtn');
+    this.routineList = document.getElementById('routineList');
+    this.routineNameInput = document.getElementById('routineName');
+    this.stepsContainer = document.getElementById('stepsContainer');
+    this.saveRoutineBtn = document.getElementById('saveRoutineBtn');
+    this.runnerContent = document.getElementById('runnerContent');
+  },
 
-        if (this.saveRoutineBtn) {
-            this.saveRoutineBtn.addEventListener('click', () => this.save());
-        }
+  bindEvents() {
+    this.newRoutineBtn.addEventListener('click', () => {
+      this.startNewRoutine();
+    });
 
-        window.addEventListener('online', () => this.updateOnlineStatus());
-        window.addEventListener('offline', () => this.updateOnlineStatus());
-    },
+    this.saveRoutineBtn.addEventListener('click', () => {
+      this.saveRoutine();
+    });
+  },
 
-    updateOnlineStatus() {
-        if (!this.onlineIcon) return;
-        if (navigator.onLine) {
-            this.onlineIcon.classList.add('online');
-            this.onlineIcon.classList.remove('offline');
-        } else {
-            this.onlineIcon.classList.add('offline');
-            this.onlineIcon.classList.remove('online');
-        }
-    },
+  go(view) {
+    this.state.currentView = view;
+    Object.keys(this.views).forEach(v => {
+      this.views[v].style.display = v === view ? 'block' : 'none';
+    });
 
-    // ===============================
-    // 📦 Persistencia
-    // ===============================
-    load() {
-        try {
-            const raw = localStorage.getItem(this.storageKey);
-            if (raw) {
-                this.routines = JSON.parse(raw);
-            } else {
-                this.routines = [];
-            }
-        } catch (e) {
-            console.error('Error loading routines', e);
-            this.routines = [];
-        }
-    },
+    if (view === 'menu') this.renderMenu();
+    if (view === 'editor') this.renderEditor();
+    if (view === 'runner') this.renderRunner();
+  },
 
-    persist() {
-        try {
-            localStorage.setItem(this.storageKey, JSON.stringify(this.routines));
-        } catch (e) {
-            console.error('Error saving routines', e);
-        }
-    },
+  updateOnlineStatus() {
+    if (!this.onlineIcon) return;
+    const online = navigator.onLine;
+    this.onlineIcon.classList.toggle('online', online);
+    this.onlineIcon.classList.toggle('offline', !online);
+  },
 
-    // ===============================
-    // 🧭 Router simple
-    // ===============================
-    go(viewName) {
-        this.views.forEach(v => {
-            v.style.display = v.getAttribute('data-view') === viewName ? 'block' : 'none';
-        });
-    },
-
-    // ===============================
-    // 📋 Menú de rutinas
-    // ===============================
-    renderMenu() {
-        if (!this.menuList) return;
-        this.menuList.innerHTML = '';
-
-        if (this.routines.length === 0) {
-            const li = document.createElement('li');
-            li.textContent = t ? t('no_routines') : 'No hay rutinas guardadas.';
-            this.menuList.appendChild(li);
-            return;
-        }
-
-        this.routines.forEach(r => {
-            const li = document.createElement('li');
-            li.className = 'routine-item';
-
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = r.name;
-            li.appendChild(nameSpan);
-
-            const editBtn = document.createElement('button');
-            editBtn.textContent = t ? t('edit') : 'Editar';
-            editBtn.addEventListener('click', () => {
-                this.editingId = r.id;
-                this.loadRoutineIntoEditor(r);
-                this.go('editor');
-            });
-            li.appendChild(editBtn);
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = t ? t('delete') : 'Borrar';
-            deleteBtn.addEventListener('click', () => {
-                if (confirm(t ? t('confirm_delete') : '¿Eliminar esta rutina?')) {
-                    this.routines = this.routines.filter(x => x.id !== r.id);
-                    this.persist();
-                    this.renderMenu();
-                }
-            });
-            li.appendChild(deleteBtn);
-
-            this.menuList.appendChild(li);
-        });
-
-        this.go('menu');
-    },
-
-    // ===============================
-    // ✏️ Editor de rutina
-    // ===============================
-    openEditor() {
-        if (this.routineNameInput) this.routineNameInput.value = '';
-        if (this.stepsContainer) this.stepsContainer.innerHTML = '';
-        this.addStepRow();
-        this.go('editor');
-    },
-
-    addStepRow(step = null) {
-        if (!this.stepsContainer) return;
-
-        const row = document.createElement('div');
-        row.className = 'step-row';
-
-        // Texto rico
-        const textDiv = document.createElement('div');
-        textDiv.className = 'step-text-rich';
-        textDiv.contentEditable = 'true';
-        textDiv.innerHTML = step ? step.text : '';
-        row.appendChild(textDiv);
-
-        // Tiempo
-        const timeInput = document.createElement('input');
-        timeInput.type = 'number';
-        timeInput.className = 'step-time';
-        timeInput.min = '1';
-        timeInput.value = step ? step.time : '';
-        row.appendChild(timeInput);
-
-        // Volumen
-        const volInput = document.createElement('input');
-        volInput.type = 'number';
-        volInput.className = 'step-volume';
-        volInput.min = '0';
-        volInput.value = step ? step.volume || 0 : '';
-        row.appendChild(volInput);
-
-        // Intervalo
-        const intervalInput = document.createElement('input');
-        intervalInput.type = 'number';
-        intervalInput.className = 'step-interval';
-        intervalInput.min = '1';
-        intervalInput.value = step ? step.interval || 15 : 15;
-        row.appendChild(intervalInput);
-
-        // Estéril
-        const sterileInput = document.createElement('input');
-        sterileInput.type = 'checkbox';
-        sterileInput.className = 'step-sterile';
-        sterileInput.checked = step ? !!step.sterile : false;
-        row.appendChild(sterileInput);
-
-        this.stepsContainer.appendChild(row);
-    },
-
-    loadRoutineIntoEditor(routine) {
-        if (!this.routineNameInput || !this.stepsContainer) return;
-        this.routineNameInput.value = routine.name;
-        this.stepsContainer.innerHTML = '';
-        routine.steps.forEach(s => this.addStepRow(s));
-    },
-
-    // ===============================
-    // 💾 Tu función save() tal cual
-    // ===============================
-    save() {
-        const name = document.getElementById('routineName').value.trim();
-        if (!name) return alert(t('alert_name'));
-        const steps = [];
-        let tiempoInvalidoDetectado = false;
-
-        document.querySelectorAll('.step-row').forEach((row, index) => {
-            const txt = sanitizeStepHTML(row.querySelector('.step-text-rich').innerHTML.trim());
-            
-            const tm = parseInt(row.querySelector('.step-time').value) || 0;
-            const vol = parseInt(row.querySelector('.step-volume').value) || 0;
-            const interval = parseInt(row.querySelector('.step-interval').value) || 15;
-            const isSterile = row.querySelector('.step-sterile').checked;
-            
-            if (txt && txt !== '<br>') {
-                if (tm <= 0) {
-                    tiempoInvalidoDetectado = true;
-                } else {
-                    steps.push({ text: txt, time: tm, sterile: isSterile, volume: vol, interval: interval });
-                }
-            }
-        });
-
-        if (tiempoInvalidoDetectado) {
-            return alert(getLang() === 'es' 
-                ? 'Por favor, introduce un tiempo válido (mayor a 0 segundos) en todos los pasos con texto.' 
-                : 'Please enter a valid time (greater than 0 seconds) for all steps with text.');
-        }
-
-        if (steps.length === 0) return alert(t('alert_steps'));
-        
-        if (this.editingId) {
-            const idx = this.routines.findIndex(r => r.id === this.editingId);
-            if (idx !== -1) this.routines[idx] = { id: this.editingId, name: name, steps: steps };
-            this.editingId = null;
-        } else {
-            this.routines.push({ id: 'routine-' + Date.now(), name: name, steps: steps });
-        }
-        this.persist();
-        this.renderMenu();
-        this.go('menu');
+  loadRoutines() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      this.state.routines = raw ? JSON.parse(raw) : [];
+    } catch {
+      this.state.routines = [];
     }
+  },
+
+  saveRoutines() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state.routines));
+  },
+
+  renderMenu() {
+    this.routineList.innerHTML = '';
+
+    if (!this.state.routines.length) {
+      const li = document.createElement('li');
+      li.textContent = t('no_routines');
+      this.routineList.appendChild(li);
+      return;
+    }
+
+    this.state.routines.forEach((routine, index) => {
+      const li = document.createElement('li');
+      li.textContent = routine.name;
+
+      const editBtn = document.createElement('button');
+      editBtn.textContent = t('edit');
+      editBtn.addEventListener('click', () => {
+        this.editRoutine(index);
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = t('delete');
+      deleteBtn.addEventListener('click', () => {
+        this.deleteRoutine(index);
+      });
+
+      const runBtn = document.createElement('button');
+      runBtn.textContent = 'Ejecutar';
+      runBtn.addEventListener('click', () => {
+        this.runRoutine(index);
+      });
+
+      li.appendChild(editBtn);
+      li.appendChild(deleteBtn);
+      li.appendChild(runBtn);
+      this.routineList.appendChild(li);
+    });
+  },
+
+  startNewRoutine() {
+    this.state.currentRoutine = {
+      name: '',
+      steps: []
+    };
+    this.go('editor');
+  },
+
+  editRoutine(index) {
+    this.state.currentRoutine = { ...this.state.routines[index], index };
+    this.go('editor');
+  },
+
+  deleteRoutine(index) {
+    if (!confirm(t('confirm_delete'))) return;
+    this.state.routines.splice(index, 1);
+    this.saveRoutines();
+    this.renderMenu();
+  },
+
+  renderEditor() {
+    const routine = this.state.currentRoutine;
+    this.routineNameInput.value = routine?.name || '';
+    this.stepsContainer.innerHTML = '';
+
+    const steps = routine?.steps?.length ? routine.steps : [{ text: '', duration: 0 }];
+
+    steps.forEach((step, i) => {
+      const row = document.createElement('div');
+      row.className = 'step-row';
+
+      const textInput = document.createElement('input');
+      textInput.type = 'text';
+      textInput.placeholder = `Paso ${i + 1}`;
+      textInput.value = step.text || '';
+
+      const durationInput = document.createElement('input');
+      durationInput.type = 'number';
+      durationInput.min = '0';
+      durationInput.placeholder = 'Segundos';
+      durationInput.value = step.duration || 0;
+
+      row.appendChild(textInput);
+      row.appendChild(durationInput);
+      this.stepsContainer.appendChild(row);
+    });
+
+    const addStepBtn = document.createElement('button');
+    addStepBtn.textContent = 'Añadir paso';
+    addStepBtn.addEventListener('click', () => {
+      const row = document.createElement('div');
+      row.className = 'step-row';
+
+      const textInput = document.createElement('input');
+      textInput.type = 'text';
+      textInput.placeholder = `Paso ${this.stepsContainer.children.length + 1}`;
+
+      const durationInput = document.createElement('input');
+      durationInput.type = 'number';
+      durationInput.min = '0';
+      durationInput.placeholder = 'Segundos';
+
+      row.appendChild(textInput);
+      row.appendChild(durationInput);
+      this.stepsContainer.appendChild(row);
+    });
+
+    this.stepsContainer.appendChild(addStepBtn);
+  },
+
+  saveRoutine() {
+    const name = this.routineNameInput.value.trim();
+    if (!name) {
+      alert(t('alert_name'));
+      return;
+    }
+
+    const steps = [];
+    const rows = this.stepsContainer.querySelectorAll('.step-row');
+
+    rows.forEach(row => {
+      const [textInput, durationInput] = row.querySelectorAll('input');
+      const text = textInput.value.trim();
+      const duration = parseInt(durationInput.value, 10) || 0;
+      if (text && duration > 0) {
+        steps.push({ text, duration });
+      }
+    });
+
+    if (!steps.length) {
+      alert(t('alert_steps'));
+      return;
+    }
+
+    const routine = { name, steps };
+
+    if (typeof this.state.currentRoutine?.index === 'number') {
+      this.state.routines[this.state.currentRoutine.index] = routine;
+    } else {
+      this.state.routines.push(routine);
+    }
+
+    this.saveRoutines();
+    this.state.currentRoutine = null;
+    this.go('menu');
+  },
+
+  runRoutine(index) {
+    this.state.currentRoutine = this.state.routines[index];
+    this.go('runner');
+  },
+
+  renderRunner() {
+    const routine = this.state.currentRoutine;
+    if (!routine) {
+      this.go('menu');
+      return;
+    }
+
+    this.runnerContent.innerHTML = '';
+
+    const title = document.createElement('h3');
+    title.textContent = routine.name;
+    this.runnerContent.appendChild(title);
+
+    const stepsList = document.createElement('ol');
+    routine.steps.forEach(step => {
+      const li = document.createElement('li');
+      li.textContent = `${step.text} (${step.duration}s)`;
+      stepsList.appendChild(li);
+    });
+    this.runnerContent.appendChild(stepsList);
+
+    const startBtn = document.createElement('button');
+    startBtn.textContent = 'Comenzar';
+    startBtn.addEventListener('click', () => {
+      this.startRunnerTimer(routine);
+    });
+
+    this.runnerContent.appendChild(startBtn);
+  },
+
+  startRunnerTimer(routine) {
+    this.runnerContent.innerHTML = '';
+
+    const noSleep = new window.NoSleep();
+    noSleep.enable();
+
+    let currentIndex = 0;
+    let remaining = routine.steps[0]?.duration || 0;
+
+    const stepTitle = document.createElement('h3');
+    const countdown = document.createElement('div');
+
+    this.runnerContent.appendChild(stepTitle);
+    this.runnerContent.appendChild(countdown);
+
+    const updateUI = () => {
+      const step = routine.steps[currentIndex];
+      stepTitle.textContent = step.text;
+      countdown.textContent = `${remaining}s`;
+    };
+
+    updateUI();
+
+    const interval = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        currentIndex++;
+        if (currentIndex >= routine.steps.length) {
+          clearInterval(interval);
+          noSleep.disable();
+          this.runnerContent.innerHTML = '<p>Rutina completada.</p>';
+          return;
+        }
+        remaining = routine.steps[currentIndex].duration;
+      }
+      updateUI();
+    }, 1000);
+  }
 };
 
-// ===============================
-// 🚀 Inicialización
-// ===============================
+window.App = App;
+
 document.addEventListener('DOMContentLoaded', () => {
-    App.init();
+  App.init();
 });
-
-// ===============================
-// 🔄 ACTUALIZACIÓN AUTOMÁTICA SEGURA DEL SW
-// ===============================
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/asistente-infusion/sw.js').then((reg) => {
-
-        reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-
-            newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    showUpdateBanner(newWorker);
-                }
-            });
-        });
-    });
-}
-
-function showUpdateBanner(worker) {
-    const banner = document.createElement('div');
-    banner.innerHTML = `
-        <div style="
-            background:#007bff;
-            color:white;
-            padding:12px;
-            text-align:center;
-            font-size:16px;
-            position:fixed;
-            bottom:0;
-            left:0;
-            right:0;
-            z-index:9999;
-            box-shadow:0 -2px 6px rgba(0,0,0,0.3);
-        ">
-            Nueva versión disponible
-            <button id="update-btn" style="
-                margin-left:10px;
-                padding:6px 12px;
-                background:white;
-                color:#007bff;
-                border:none;
-                border-radius:4px;
-                font-weight:bold;
-            ">Actualizar</button>
-        </div>
-    `;
-    document.body.appendChild(banner);
-
-    document.getElementById('update-btn').onclick = () => {
-        worker.postMessage('SKIP_WAITING');
-        window.location.reload();
-    };
-       }
