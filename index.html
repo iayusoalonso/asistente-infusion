@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Guía de Infusión Autónoma</title>
     
-    <!-- Configuración para Web App Autónoma (PWA/Offline) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
@@ -20,7 +19,8 @@
             --primary-active: #1d4ed8;
             --success: #10b981;
             --danger: #ef4444;
-            --font-stack: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --border: #e2e8f0;
+            --font-stack: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         * {
@@ -37,11 +37,12 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
             padding: 16px;
         }
 
-        /* Cabecera de la Aplicación */
+        .hidden { display: none !important; }
+
+        /* Cabecera */
         .app-header {
             display: flex;
             justify-content: space-between;
@@ -56,82 +57,101 @@
         .app-title {
             font-size: 1.1rem;
             font-weight: 700;
-            color: var(--text-main);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            cursor: pointer;
         }
 
-        .status-indicators {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .badge {
-            font-size: 0.75rem;
+        .btn-nav {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 8px;
             font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            cursor: pointer;
         }
 
-        .badge-online { background-color: #e2fbf0; color: #065f46; }
-        .badge-offline { background-color: #fee2e2; color: #991b1b; }
-        .badge-wakelock { background-color: #eff6ff; color: #1e40af; }
-
-        /* Contenedor Principal / Panel de Control */
-        .main-panel {
+        .main-container {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 16px;
             max-width: 600px;
             width: 100%;
             margin: 0 auto;
+            gap: 16px;
         }
 
-        /* Pantalla de Estado del Proceso */
-        .display-card {
+        .card {
             background: var(--card-bg);
-            border-radius: 24px;
-            padding: 24px;
-            text-align: center;
+            border-radius: 20px;
+            padding: 20px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        /* VISTA 1: MENÚ PRINCIPAL */
+        .routine-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .routine-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg-color);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .routine-info { cursor: pointer; flex: 1; }
+        .routine-name { font-weight: 700; font-size: 1.1rem; }
+        .routine-meta { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+
+        .btn-action {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger-ui { background: #fee2e2; color: var(--danger); }
+
+        /* VISTA 2: CREADOR DE RUTINAS */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .step-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        /* VISTA 3: EJECUCIÓN (TEMPORIZADOR) */
+        .display-card {
+            text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: center;
             flex: 1;
-            min-height: 200px;
+            min-height: 220px;
         }
 
-        .step-indicator {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
+        .step-indicator { font-size: 1rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; }
+        .instruction-text { font-size: 1.5rem; font-weight: 600; line-height: 1.4; margin-bottom: 16px; }
+        .timer-display { font-size: 4.5rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 8px 0; }
 
-        .instruction-text {
-            font-size: 1.4rem;
-            font-weight: 600;
-            line-height: 1.4;
-            color: var(--text-main);
-            margin-bottom: 16px;
-        }
-
-        .timer-display {
-            font-size: 4.5rem;
-            font-weight: 800;
-            font-variant-numeric: tabular-nums;
-            color: var(--text-main);
-            line-height: 1;
-            margin: 8px 0;
-        }
-
-        /* Botón de Codo Gigante (Optimizado para pulsaciones fáciles) */
+        /* Botón de Codo Gigante */
         .elbow-btn {
             width: 100%;
             min-height: 140px;
@@ -144,7 +164,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             cursor: pointer;
-            transition: background 0.1s ease, transform 0.05s ease;
+            transition: background 0.1s, transform 0.05s;
             box-shadow: 0 8px 0px var(--primary-active), 0 12px 20px rgba(37, 99, 235, 0.3);
             display: flex;
             align-items: center;
@@ -157,64 +177,280 @@
             transform: translateY(6px);
             box-shadow: 0 2px 0px var(--primary-active), 0 4px 10px rgba(37, 99, 235, 0.2);
         }
-
-        /* Estado de Alerta/Pausa */
-        .elbow-btn.btn-danger {
-            background: var(--danger);
-            box-shadow: 0 8px 0px #b91c1c, 0 12px 20px rgba(239, 68, 68, 0.3);
-        }
-        .elbow-btn.btn-danger:active {
-            box-shadow: 0 2px 0px #b91c1c, 0 4px 10px rgba(239, 68, 68, 0.2);
-        }
-
-        /* Elementos ocultos para el Hack de NoSleep */
-        .hidden-media {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-            pointer-events: none;
-            overflow: hidden;
+        
+        .elbow-btn.btn-success {
+            background: var(--success);
+            box-shadow: 0 8px 0px #047857, 0 12px 20px rgba(16, 185, 129, 0.3);
         }
     </style>
 </head>
 <body>
 
-    <!-- Cabecera e Indicadores de Estado -->
     <header class="app-header">
-        <div class="app-title">Infusión Control</div>
-        <div class="status-indicators">
-            <span id="netStatus" class="badge badge-online">En Línea</span>
-            <span id="wakeStatus" class="badge badge-wakelock">Pantalla ON</span>
-        </div>
+        <div class="app-title" onclick="router.go('menu')">⚙️ Control App</div>
+        <button id="headerNavBtn" class="btn-nav hidden" onclick="router.go('menu')">Volver al Menú</button>
     </header>
 
-    <!-- Panel de Control Principal -->
-    <main class="main-panel">
-        
-        <!-- Tarjeta de Visualización de Tiempos y Pasos -->
-        <section class="display-card" aria-live="polite">
-            <div id="currentStep" class="step-indicator">Paso 1 de 5</div>
-            <h1 id="instruction" class="instruction-text">Prepare el entorno antes de iniciar</h1>
-            <div id="timer" class="timer-display">00:00</div>
+    <main class="main-container">
+
+        <!-- 1. VISTA: MENÚ PRINCIPAL -->
+        <section id="view-menu" class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Mis Rutinas</h2>
+                <button class="btn-action btn-primary" onclick="router.go('creator')">+ Crear Nueva</button>
+            </div>
+            <div id="menu-routines-container" class="routine-list">
+                <!-- Se inyecta dinámicamente -->
+            </div>
         </section>
 
-        <!-- Botón de Gran Tamaño para Activación con el Codo -->
-        <button id="actionBtn" class="elbow-btn" type="button">
-            CONFIRMAR e INICIAR
-        </button>
+        <!-- 2. VISTA: CREADOR / EDITOR DE RUTINAS -->
+        <section id="view-creator" class="card hidden">
+            <h2 style="margin-bottom: 16px;">Configurar Rutina</h2>
+            <div class="form-group">
+                <label for="routineName">Nombre del Procedimiento</label>
+                <input type="text" id="routineName" class="form-control" placeholder="Ej. Infusión de Mantenimiento">
+            </div>
+            
+            <div class="form-group">
+                <label>Pasos del Proceso</label>
+                <div id="stepsBuilderContainer">
+                    <!-- Filas dinámicas de pasos -->
+                </div>
+                <button type="button" class="btn-action" style="background:#e2e8f0; width:100%; margin-top:8px;" onclick="routineManager.addStepRow()">
+                    + Añadir Paso
+                </button>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="btn-action btn-primary" style="flex:1;" onclick="routineManager.save()">Guardar Rutina</button>
+                <button class="btn-action" style="background:#cbd5e1;" onclick="router.go('menu')">Cancelar</button>
+            </div>
+        </section>
+
+        <!-- 3. VISTA: EJECUCIÓN (TEMPORIZADOR + BOTÓN DE CODO) -->
+        <section id="view-execution" class="hidden" style="display:flex; flex-direction:column; flex:1; gap:16px;">
+            <div class="card display-card">
+                <div id="currentStep" class="step-indicator">Paso 0 de 0</div>
+                <h1 id="instruction" class="instruction-text">Cargando...</h1>
+                <div id="timer" class="timer-display">00:00</div>
+            </div>
+            <button id="actionBtn" class="elbow-btn" type="button">Iniciar</button>
+        </section>
 
     </main>
 
-    <!-- Contenedor técnico para los elementos de video ocultos (NoSleep base64 fallbacks) -->
-    <div class="hidden-media" aria-hidden="true">
-        <video id="fallbackVideoWebm" loop playsinline muted></video>
-        <video id="fallbackVideoMp4" loop playsinline muted></video>
-    </div>
-
-    <!-- El script con la lógica de control, timers y el "corazón" del JS iría justo aquí abajo -->
     <script>
-        // Aquí se inyecta la lógica de inicialización, NoSleep, Web Speech API y la máquina de estados.
+        // --- 1. ENRUTADOR DE VISTAS (SPA) ---
+        const router = {
+            current: 'menu',
+            go(viewId) {
+                this.current = viewId;
+                document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+                document.getElementById(`view-${viewId}`).classList.remove('hidden');
+                
+                const navBtn = document.getElementById('headerNavBtn');
+                if (viewId === 'menu') {
+                    navBtn.classList.add('hidden');
+                    engine.stop();
+                    routineManager.renderMenu();
+                } else {
+                    navBtn.classList.remove('hidden');
+                }
+            }
+        };
+
+        // --- 2. GESTOR DE DATOS (LOCALSTORAGE CRUD) ---
+        const routineManager = {
+            storageKey: 'infusion_routines',
+            routines: [],
+            
+            init() {
+                const data = localStorage.getItem(this.storageKey);
+                if (data) {
+                    this.routines = JSON.parse(data);
+                } else {
+                    // Rutina por defecto inicial si está vacío
+                    this.routines = [{
+                        id: 'default-1',
+                        name: 'Procedimiento Estándar',
+                        steps: [
+                            { text: 'Purgar línea de infusión', time: 10 },
+                            { text: 'Verificar accesos y conectar', time: 15 },
+                            { text: 'Monitorizar infusión activa', time: 60 }
+                        ]
+                    }];
+                    this.persist();
+                }
+                this.renderMenu();
+            },
+            persist() {
+                localStorage.setItem(this.storageKey, JSON.stringify(this.routines));
+            },
+            renderMenu() {
+                const container = document.getElementById('menu-routines-container');
+                container.innerHTML = '';
+                
+                this.routines.forEach(r => {
+                    const item = document.createElement('div');
+                    item.className = 'routine-item';
+                    item.innerHTML = `
+                        <div class="routine-info" onclick="engine.setup('${r.id}')">
+                            <div class="routine-name">${r.name}</div>
+                            <div class="routine-meta">${r.steps.length} pasos · Total: ${r.steps.reduce((acc, s)=>acc+parseInt(s.time), 0)}s</div>
+                        </div>
+                        <button class="btn-action btn-danger-ui" onclick="routineManager.delete('${r.id}')">Borrar</button>
+                    `;
+                    container.appendChild(item);
+                });
+            },
+            addStepRow(text = '', time = '') {
+                const container = document.getElementById('stepsBuilderContainer');
+                const row = document.createElement('div');
+                row.className = 'step-row';
+                row.innerHTML = `
+                    <input type="text" class="form-control step-text" placeholder="Instrucción del paso" value="${text}" style="flex: 2;">
+                    <input type="number" class="form-control step-time" placeholder="Seg." value="${time}" style="flex: 1;">
+                    <button type="button" class="btn-action btn-danger-ui" onclick="this.parentElement.remove()">X</button>
+                `;
+                container.appendChild(row);
+            },
+            clearCreatorForm() {
+                document.getElementById('routineName').value = '';
+                document.getElementById('stepsBuilderContainer').innerHTML = '';
+                this.addStepRow(); // Arranca con una fila limpia
+            },
+            save() {
+                const name = document.getElementById('routineName').value.trim();
+                if (!name) return alert('Escribe un nombre para la rutina');
+                
+                const stepRows = document.querySelectorAll('.step-row');
+                const steps = [];
+                
+                stepRows.forEach(row => {
+                    const txt = row.querySelector('.step-text').value.trim();
+                    const tm = parseInt(row.querySelector('.step-time').value);
+                    if (txt && tm > 0) {
+                        steps.push({ text: txt, time: tm });
+                    }
+                });
+
+                if (steps.length === 0) return alert('Añada al menos un paso válido con tiempo.');
+
+                this.routines.push({
+                    id: 'routine-' + Date.now(),
+                    name: name,
+                    steps: steps
+                });
+                
+                this.persist();
+                router.go('menu');
+            },
+            delete(id) {
+                if (confirm('¿Seguro que quieres eliminar esta rutina?')) {
+                    this.routines = this.routines.filter(r => r.id !== id);
+                    this.persist();
+                    this.renderMenu();
+                }
+            }
+        };
+
+        // --- 3. MOTOR DEL TEMPORIZADOR Y MÁQUINA DE ESTADOS ---
+        const engine = {
+            activeRoutine: null,
+            currentStepIndex: 0,
+            timeLeft: 0,
+            timerInterval: null,
+            state: 'STOPPED', // STOPPED, RUNNING, PAUSED
+
+            setup(routineId) {
+                const routine = routineManager.routines.find(r => r.id === routineId);
+                if (!routine) return;
+                
+                this.activeRoutine = routine;
+                this.currentStepIndex = 0;
+                this.state = 'STOPPED';
+                
+                router.go('execution');
+                this.loadStep();
+                
+                // Configurar el Botón de Codo para reaccionar al contexto
+                const btn = document.getElementById('actionBtn');
+                btn.onclick = () => this.handleElbowClick();
+            },
+            loadStep() {
+                const step = this.activeRoutine.steps[this.currentStepIndex];
+                document.getElementById('currentStep').textContent = `Paso ${this.currentStepIndex + 1} de ${this.activeRoutine.steps.length}`;
+                document.getElementById('instruction').textContent = step.text;
+                this.timeLeft = step.time;
+                this.updateDisplay();
+                
+                const btn = document.getElementById('actionBtn');
+                btn.textContent = "INICIAR TEMPORIZADOR";
+                btn.className = "elbow-btn";
+                
+                // Integración de voz limpia opcional (TTS) si el navegador la soporta
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(new SpeechSynthesisUtterance(step.text));
+                }
+            },
+            updateDisplay() {
+                const mins = String(Math.floor(this.timeLeft / 60)).padStart(2, '0');
+                const secs = String(this.timeLeft % 60).padStart(2, '0');
+                document.getElementById('timer').textContent = `${mins}:${secs}`;
+            },
+            handleElbowClick() {
+                const btn = document.getElementById('actionBtn');
+                
+                if (this.state === 'STOPPED' || this.state === 'PAUSED') {
+                    // Arrancar / Continuar
+                    this.state = 'RUNNING';
+                    btn.textContent = "PASAR DE PASO (Codo)";
+                    btn.className = "elbow-btn btn-success";
+                    
+                    this.timerInterval = setInterval(() => {
+                        this.timeLeft--;
+                        this.updateDisplay();
+                        
+                        if (this.timeLeft <= 0) {
+                            clearInterval(this.timerInterval);
+                            this.nextStep();
+                        }
+                    }, 1000);
+                } else if (this.state === 'RUNNING') {
+                    // Forzar paso de manera manual con el codo antes de que acabe el tiempo
+                    clearInterval(this.timerInterval);
+                    this.nextStep();
+                }
+            },
+            nextStep() {
+                this.currentStepIndex++;
+                if (this.currentStepIndex < this.activeRoutine.steps.length) {
+                    this.state = 'STOPPED';
+                    this.loadStep();
+                } else {
+                    // Fin de la rutina completa
+                    this.state = 'STOPPED';
+                    document.getElementById('instruction').textContent = "¡Procedimiento Finalizado!";
+                    document.getElementById('timer').textContent = "00:00";
+                    const btn = document.getElementById('actionBtn');
+                    btn.textContent = "VOLVER AL MENÚ";
+                    btn.className = "elbow-btn";
+                    btn.onclick = () => router.go('menu');
+                }
+            },
+            stop() {
+                clearInterval(this.timerInterval);
+                this.state = 'STOPPED';
+            }
+        };
+
+        // --- 4. INICIALIZACIÓN ---
+        window.addEventListener('DOMContentLoaded', () => {
+            routineManager.init();
+            routineManager.clearCreatorForm();
+        });
     </script>
 </body>
 </html>
