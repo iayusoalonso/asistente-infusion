@@ -1,32 +1,59 @@
-const CACHE_NAME = 'infusion-app-v7'; // <--- v6: todo local, sin dependencias de CDN
+const CACHE_NAME = 'infusion-app-v8';
 const ASSETS = [
-  './',
-  './index.html',
-  './style.css',
-  './app.js',
-  './i18n.js',
-  './manifest.json',
-  './vendor/NoSleep.min.js',
-  './icon-192.png',
-  './icon-512.png'
+  '/asistente-infusion/',
+  '/asistente-infusion/index.html',
+  '/asistente-infusion/style.css',
+  '/asistente-infusion/app.js',
+  '/asistente-infusion/i18n.js',
+  '/asistente-infusion/manifest.json',
+  '/asistente-infusion/vendor/NoSleep.min.js',
+  '/asistente-infusion/icon-192.png',
+  '/asistente-infusion/icon-512.png'
 ];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+// --- INSTALACIÓN ---
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(ASSETS))
+      .then(() => {
+        // No activamos aún: esperamos a que el usuario cierre la app
+        return self.skipWaiting();
+      })
   );
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(keys.map((key) => {
-        if (key !== CACHE_NAME) return caches.delete(key);
-      }));
-    }).then(() => self.clients.claim())
+// --- ACTIVACIÓN ---
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) return caches.delete(key);
+        })
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', (e) => {
-  e.respondWith(caches.match(e.request).then((res) => res || fetch(e.request)));
+// --- FETCH ---
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      return (
+        cached ||
+        fetch(event.request).catch(() => {
+          // Offline: si no está en caché, devuelve index.html
+          return caches.match('/asistente-infusion/index.html');
+        })
+      );
+    })
+  );
+});
+
+// --- AVISO DE NUEVA VERSIÓN ---
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
