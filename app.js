@@ -25,6 +25,57 @@ function updateOnlineStatus() {
     }
 }
 
+// Reconocimiento de Voz (Escucha activa)
+const voiceRecognizer = {
+    recognition: null,
+    isListening: false,
+
+    init() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.log("El reconocimiento de voz no es soportado por este navegador.");
+            return;
+        }
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = false;
+
+        this.recognition.onresult = (event) => {
+            const result = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+            console.log("Texto escuchado:", result);
+            
+            // Comandos aceptados según idioma
+            const isEs = getLang() === 'es';
+            const triggerNext = isEs 
+                ? (result.includes('siguiente') || result.includes('pasar') || result.includes('continuar'))
+                : (result.includes('next') || result.includes('continue'));
+
+            if (triggerNext && engine.state === 'RUNNING') {
+                engine.handleElbowClick();
+            }
+        };
+
+        // Auto-reiniciar si se corta mientras la ejecución esté activa
+        this.recognition.onend = () => {
+            if (this.isListening) {
+                try { this.recognition.start(); } catch(e) {}
+            }
+        };
+    },
+    start() {
+        if (!this.recognition) return;
+        this.recognition.lang = getLang() === 'es' ? 'es-ES' : 'en-US';
+        this.isListening = true;
+        try { this.recognition.start(); } catch(e) {}
+    },
+    stop() {
+        this.isListening = false;
+        if (this.recognition) {
+            try { this.recognition.stop(); } catch(e) {}
+        }
+    }
+};
+
 // Enrutador de vistas
 const router = {
     current: 'menu',
@@ -37,6 +88,7 @@ const router = {
         if (viewId === 'menu') {
             navBtn.classList.add('hidden');
             engine.stop();
+            voiceRecognizer.stop();
             setWakeLock(false);
             routineManager.isReorderMode = false;
             document.getElementById('reorderMenuBtn').classList.remove('btn-active-reorder');
@@ -47,7 +99,7 @@ const router = {
     }
 };
 
-// Gestor de Procedimientos (CRUD y DOM)
+// Gestor de Procedimientos
 const routineManager = {
     storageKey: 'infusion_routines_modular_v1',
     routines: [],
@@ -258,7 +310,7 @@ const routineManager = {
     }
 };
 
-// Motor de Ejecución y Cronómetros
+// Motor de Ejecución
 const engine = {
     activeRoutine: null,
     currentStepIndex: 0,
@@ -274,6 +326,7 @@ const engine = {
         this.currentStepIndex = 0;
         this.state = 'STOPPED';
         router.go('execution');
+        voiceRecognizer.start(); // Activamos el micrófono al empezar
         this.loadStep();
     },
     loadStep() {
@@ -336,7 +389,11 @@ const engine = {
                 this.updateDisplay();
                 if (this.timeLeft <= 0) {
                     clearInterval(this.timerInterval);
-                    this.nextStep();
+                    // CORRECCIÓN: No pasamos de paso automáticamente. Frenamos en 00:00 y avisamos.
+                    if ('speechSynthesis' in window) {
+                        const msg = getLang() === 'es' ? 'Tiempo concluido.' : 'Time up.';
+                        window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+                    }
                 }
             }, 1000);
         } else if (this.state === 'RUNNING') {
@@ -351,6 +408,7 @@ const engine = {
             this.loadStep();
         } else {
             this.state = 'STOPPED';
+            voiceRecognizer.stop(); // Fin del procedimiento, apagamos micro
             setWakeLock(false);
             document.getElementById('sterileBanner').classList.add('hidden');
             document.getElementById('volumeContainer').classList.add('hidden');
@@ -365,14 +423,16 @@ const engine = {
     stop() {
         clearInterval(this.timerInterval);
         this.state = 'STOPPED';
+        voiceRecognizer.stop();
         setWakeLock(false);
     }
 };
 
-// Inicialización general e interceptores de la interfaz
+// Inicialización general
 window.addEventListener('DOMContentLoaded', () => {
     translateUI();
     routineManager.init();
+    voiceRecognizer.init(); // Inicializar el micrófono
     updateOnlineStatus();
 
     window.addEventListener('online', updateOnlineStatus);
@@ -393,7 +453,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('netStatusDot').onclick = () => document.getElementById('netStatusText').classList.toggle('hidden');
     document.getElementById('actionBtn').onclick = () => { setWakeLock(true); engine.handleElbowClick(); };
 
-    // Registro del Service Worker para soporte PWA y modo offline completo en GitHub Pages
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
             .then(() => console.log('Service Worker Activo'))
