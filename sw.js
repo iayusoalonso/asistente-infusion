@@ -1,4 +1,5 @@
 const CACHE_NAME = 'infusion-app-v8';
+
 const ASSETS = [
   '/asistente-infusion/',
   '/asistente-infusion/index.html',
@@ -11,19 +12,19 @@ const ASSETS = [
   '/asistente-infusion/icon-512.png'
 ];
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(ASSETS))
+      .then(cache => cache.addAll(ASSETS))
       .then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then((keys) =>
+    caches.keys().then(keys =>
       Promise.all(
-        keys.map((key) => {
+        keys.map(key => {
           if (key !== CACHE_NAME) return caches.delete(key);
         })
       )
@@ -31,21 +32,18 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request).catch(() => {
-          return caches.match('/asistente-infusion/index.html');
-        })
-      );
+    caches.match(event.request).then(cached => {
+      return cached ||
+        fetch(event.request).catch(() =>
+          caches.match('/asistente-infusion/index.html')
+        );
     })
   );
 });
 
-// Para actualización automática segura
-self.addEventListener('message', (event) => {
+self.addEventListener('message', event => {
   if (event.data === 'SKIP_WAITING') {
     self.skipWaiting();
   }
