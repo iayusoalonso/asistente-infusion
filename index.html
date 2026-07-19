@@ -9,6 +9,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
 
+    <!-- Inclusión de NoSleep para mantener la pantalla activa en despliegues web/GitHub Pages -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
+
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -19,6 +22,8 @@
             --primary-active: #1d4ed8;
             --success: #10b981;
             --danger: #ef4444;
+            --sterile-bg: #fee2e2;
+            --sterile-text: #991b1b;
             --border: #e2e8f0;
             --font-stack: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
@@ -42,7 +47,7 @@
 
         .hidden { display: none !important; }
 
-        /* Cabecera */
+        /* Cabecera sin títulos estáticos */
         .app-header {
             display: flex;
             justify-content: space-between;
@@ -52,23 +57,38 @@
             border-radius: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.04);
             margin-bottom: 16px;
-        }
-
-        .app-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            cursor: pointer;
+            min-height: 56px;
         }
 
         .btn-nav {
             background: var(--bg-color);
             border: 1px solid var(--border);
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
+            color: var(--text-main);
         }
+
+        .status-indicators {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 6px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+        .badge-online { background-color: #e2fbf0; color: #065f46; }
+        .badge-offline { background-color: #fee2e2; color: #991b1b; }
+        .badge-wakelock-on { background-color: #eff6ff; color: #1e40af; }
+        .badge-wakelock-off { background-color: #e2e8f0; color: #475569; }
 
         .main-container {
             flex: 1;
@@ -87,14 +107,27 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
-        /* VISTA 1: MENÚ PRINCIPAL */
-        .routine-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 16px;
+        /* Banner de Paso Estéril */
+        .sterile-banner {
+            background-color: var(--danger);
+            color: white;
+            text-align: center;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            animation: pulse-sterile 2s infinite;
         }
 
+        @keyframes pulse-sterile {
+            0% { opacity: 1; }
+            50% { opacity: 0.85; }
+            100% { opacity: 1; }
+        }
+
+        /* Vista 1: Menú Principal */
+        .routine-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
         .routine-item {
             display: flex;
             justify-content: space-between;
@@ -104,54 +137,56 @@
             border-radius: 12px;
             border: 1px solid var(--border);
         }
-
         .routine-info { cursor: pointer; flex: 1; }
         .routine-name { font-weight: 700; font-size: 1.1rem; }
         .routine-meta { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
 
-        .btn-action {
-            padding: 10px 16px;
-            border-radius: 8px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
+        .btn-action { padding: 10px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger-ui { background: #fee2e2; color: var(--danger); }
 
-        /* VISTA 2: CREADOR DE RUTINAS */
+        /* Vista 2: Creador de Rutinas */
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-        }
+        .form-control { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; }
         
         .step-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-            align-items: center;
+            background: var(--bg-color);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
         }
+        .step-row-inputs { display: flex; gap: 8px; margin-bottom: 8px; }
+        .step-row-modifiers { display: flex; gap: 16px; align-items: center; font-size: 0.9rem; font-weight: 600; }
 
-        /* VISTA 3: EJECUCIÓN (TEMPORIZADOR) */
+        /* Vista 3: Ejecución */
         .display-card {
             text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: center;
             flex: 1;
-            min-height: 220px;
+            min-height: 240px;
+        }
+        .step-indicator { font-size: 1rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; }
+        .instruction-text { font-size: 1.6rem; font-weight: 700; line-height: 1.3; margin-bottom: 12px; }
+        
+        /* Indicador Volumétrico */
+        .volume-helper {
+            background: #eff6ff;
+            color: #1e40af;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: inline-block;
+            margin: 8px auto;
         }
 
-        .step-indicator { font-size: 1rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; }
-        .instruction-text { font-size: 1.5rem; font-weight: 600; line-height: 1.4; margin-bottom: 16px; }
-        .timer-display { font-size: 4.5rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 8px 0; }
+        .timer-display { font-size: 5rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 12px 0; }
 
-        /* Botón de Codo Gigante */
+        /* Botón de Codo */
         .elbow-btn {
             width: 100%;
             min-height: 140px;
@@ -172,12 +207,10 @@
             padding: 20px;
             user-select: none;
         }
-
         .elbow-btn:active {
             transform: translateY(6px);
             box-shadow: 0 2px 0px var(--primary-active), 0 4px 10px rgba(37, 99, 235, 0.2);
         }
-        
         .elbow-btn.btn-success {
             background: var(--success);
             box-shadow: 0 8px 0px #047857, 0 12px 20px rgba(16, 185, 129, 0.3);
@@ -187,8 +220,11 @@
 <body>
 
     <header class="app-header">
-        <div class="app-title" onclick="router.go('menu')">⚙️ Control App</div>
-        <button id="headerNavBtn" class="btn-nav hidden" onclick="router.go('menu')">Volver al Menú</button>
+        <button id="headerNavBtn" class="btn-nav hidden" onclick="router.go('menu')">← Volver</button>
+        <div class="status-indicators">
+            <span id="netStatus" class="badge badge-online">En Línea</span>
+            <span id="wakeStatus" class="badge badge-wakelock-off">Pantalla Estándar</span>
+        </div>
     </header>
 
     <main class="main-container">
@@ -196,43 +232,46 @@
         <!-- 1. VISTA: MENÚ PRINCIPAL -->
         <section id="view-menu" class="card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>Mis Rutinas</h2>
-                <button class="btn-action btn-primary" onclick="router.go('creator')">+ Crear Nueva</button>
+                <h2>Procedimientos</h2>
+                <button class="btn-action btn-primary" onclick="router.go('creator')">+ Nuevo</button>
             </div>
-            <div id="menu-routines-container" class="routine-list">
-                <!-- Se inyecta dinámicamente -->
-            </div>
+            <div id="menu-routines-container" class="routine-list"></div>
         </section>
 
         <!-- 2. VISTA: CREADOR / EDITOR DE RUTINAS -->
         <section id="view-creator" class="card hidden">
             <h2 style="margin-bottom: 16px;">Configurar Rutina</h2>
             <div class="form-group">
-                <label for="routineName">Nombre del Procedimiento</label>
-                <input type="text" id="routineName" class="form-control" placeholder="Ej. Infusión de Mantenimiento">
+                <label for="routineName">Nombre del Proceso</label>
+                <input type="text" id="routineName" class="form-control" placeholder="Ej. Perfusión de Medicación X">
             </div>
             
             <div class="form-group">
-                <label>Pasos del Proceso</label>
-                <div id="stepsBuilderContainer">
-                    <!-- Filas dinámicas de pasos -->
-                </div>
+                <label>Pasos Técnicos</label>
+                <div id="stepsBuilderContainer"></div>
                 <button type="button" class="btn-action" style="background:#e2e8f0; width:100%; margin-top:8px;" onclick="routineManager.addStepRow()">
                     + Añadir Paso
                 </button>
             </div>
 
             <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button class="btn-action btn-primary" style="flex:1;" onclick="routineManager.save()">Guardar Rutina</button>
+                <button class="btn-action btn-primary" style="flex:1;" onclick="routineManager.save()">Guardar Cambios</button>
                 <button class="btn-action" style="background:#cbd5e1;" onclick="router.go('menu')">Cancelar</button>
             </div>
         </section>
 
         <!-- 3. VISTA: EJECUCIÓN (TEMPORIZADOR + BOTÓN DE CODO) -->
         <section id="view-execution" class="hidden" style="display:flex; flex-direction:column; flex:1; gap:16px;">
+            <div id="sterileBanner" class="sterile-banner hidden">⚠️ ATENCIÓN: PASO ESTÉRIL ⚠️</div>
+            
             <div class="card display-card">
                 <div id="currentStep" class="step-indicator">Paso 0 de 0</div>
-                <h1 id="instruction" class="instruction-text">Cargando...</h1>
+                <h1 id="instruction" class="instruction-text">Cargando instrucción...</h1>
+                
+                <div id="volumeContainer" class="volume-helper hidden">
+                    Infundido: <span id="volCurrent">0.0</span> ml de <span id="volTotal">0</span> ml
+                </div>
+
                 <div id="timer" class="timer-display">00:00</div>
             </div>
             <button id="actionBtn" class="elbow-btn" type="button">Iniciar</button>
@@ -241,7 +280,40 @@
     </main>
 
     <script>
-        // --- 1. ENRUTADOR DE VISTAS (SPA) ---
+        // --- Instancia Global de NoSleep ---
+        const noSleepInstance = new NoSleep();
+        let wakeLockActive = false;
+
+        function setWakeLock(enable) {
+            const badge = document.getElementById('wakeStatus');
+            if (enable && !wakeLockActive) {
+                noSleepInstance.enable();
+                wakeLockActive = true;
+                badge.textContent = "Pantalla Always-ON";
+                badge.className = "badge badge-wakelock-on";
+            } else if (!enable && wakeLockActive) {
+                noSleepInstance.disable();
+                wakeLockActive = false;
+                badge.textContent = "Pantalla Estándar";
+                badge.className = "badge badge-wakelock-off";
+            }
+        }
+
+        // --- Estado de red ---
+        function updateOnlineStatus() {
+            const netStatus = document.getElementById('netStatus');
+            if (navigator.onLine) {
+                netStatus.textContent = "En Línea";
+                netStatus.className = "badge badge-online";
+            } else {
+                netStatus.textContent = "Sin Conexión";
+                netStatus.className = "badge badge-offline";
+            }
+        }
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+
+        // --- ENRUTADOR SPA ---
         const router = {
             current: 'menu',
             go(viewId) {
@@ -253,6 +325,7 @@
                 if (viewId === 'menu') {
                     navBtn.classList.add('hidden');
                     engine.stop();
+                    setWakeLock(false); 
                     routineManager.renderMenu();
                 } else {
                     navBtn.classList.remove('hidden');
@@ -260,24 +333,24 @@
             }
         };
 
-        // --- 2. GESTOR DE DATOS (LOCALSTORAGE CRUD) ---
+        // --- GESTIÓN DE RUTA / DATOS ---
         const routineManager = {
-            storageKey: 'infusion_routines',
+            storageKey: 'infusion_routines_github_v2',
             routines: [],
             
             init() {
+                updateOnlineStatus();
                 const data = localStorage.getItem(this.storageKey);
                 if (data) {
                     this.routines = JSON.parse(data);
                 } else {
-                    // Rutina por defecto inicial si está vacío
                     this.routines = [{
-                        id: 'default-1',
-                        name: 'Procedimiento Estándar',
+                        id: 'demo-infusion',
+                        name: 'Procedimiento Completo de Muestra',
                         steps: [
-                            { text: 'Purgar línea de infusión', time: 10 },
-                            { text: 'Verificar accesos y conectar', time: 15 },
-                            { text: 'Monitorizar infusión activa', time: 60 }
+                            { text: 'Apertura de campo y preparación de vial', time: 20, sterile: true, volume: 0 },
+                            { text: 'Purgado preventivo del sistema', time: 15, sterile: false, volume: 0 },
+                            { text: 'Infusión guiada activa', time: 60, sterile: false, volume: 250 }
                         ]
                     }];
                     this.persist();
@@ -290,39 +363,46 @@
             renderMenu() {
                 const container = document.getElementById('menu-routines-container');
                 container.innerHTML = '';
-                
                 this.routines.forEach(r => {
                     const item = document.createElement('div');
                     item.className = 'routine-item';
                     item.innerHTML = `
                         <div class="routine-info" onclick="engine.setup('${r.id}')">
                             <div class="routine-name">${r.name}</div>
-                            <div class="routine-meta">${r.steps.length} pasos · Total: ${r.steps.reduce((acc, s)=>acc+parseInt(s.time), 0)}s</div>
+                            <div class="routine-meta">${r.steps.length} pasos · Pasos estériles: ${r.steps.some(s=>s.sterile)?'SÍ':'NO'}</div>
                         </div>
                         <button class="btn-action btn-danger-ui" onclick="routineManager.delete('${r.id}')">Borrar</button>
                     `;
                     container.appendChild(item);
                 });
             },
-            addStepRow(text = '', time = '') {
+            addStepRow(text = '', time = '', sterile = false, volume = '') {
                 const container = document.getElementById('stepsBuilderContainer');
                 const row = document.createElement('div');
                 row.className = 'step-row';
                 row.innerHTML = `
-                    <input type="text" class="form-control step-text" placeholder="Instrucción del paso" value="${text}" style="flex: 2;">
-                    <input type="number" class="form-control step-time" placeholder="Seg." value="${time}" style="flex: 1;">
-                    <button type="button" class="btn-action btn-danger-ui" onclick="this.parentElement.remove()">X</button>
+                    <div class="step-row-inputs">
+                        <input type="text" class="form-control step-text" placeholder="Orden o acción" value="${text}" style="flex: 2;">
+                        <input type="number" class="form-control step-time" placeholder="Seg." value="${time}" style="width: 75px;">
+                        <input type="number" class="form-control step-volume" placeholder="ml" value="${volume}" style="width: 85px;">
+                    </div>
+                    <div class="step-row-modifiers">
+                        <label style="display:flex; align-items:center; gap:6px; color:var(--sterile-text); cursor:pointer;">
+                            <input type="checkbox" class="step-sterile" ${sterile ? 'checked' : ''}> ⚠️ Paso Estéril
+                        </label>
+                        <button type="button" class="btn-action btn-danger-ui" style="padding:4px 8px; margin-left:auto;" onclick="this.parentElement.parentElement.remove()">Eliminar</button>
+                    </div>
                 `;
                 container.appendChild(row);
             },
             clearCreatorForm() {
                 document.getElementById('routineName').value = '';
                 document.getElementById('stepsBuilderContainer').innerHTML = '';
-                this.addStepRow(); // Arranca con una fila limpia
+                this.addStepRow();
             },
             save() {
                 const name = document.getElementById('routineName').value.trim();
-                if (!name) return alert('Escribe un nombre para la rutina');
+                if (!name) return alert('Inserta un nombre válido.');
                 
                 const stepRows = document.querySelectorAll('.step-row');
                 const steps = [];
@@ -330,24 +410,22 @@
                 stepRows.forEach(row => {
                     const txt = row.querySelector('.step-text').value.trim();
                     const tm = parseInt(row.querySelector('.step-time').value);
+                    const vol = parseInt(row.querySelector('.step-volume').value) || 0;
+                    const isSterile = row.querySelector('.step-sterile').checked;
+                    
                     if (txt && tm > 0) {
-                        steps.push({ text: txt, time: tm });
+                        steps.push({ text: txt, time: tm, sterile: isSterile, volume: vol });
                     }
                 });
 
-                if (steps.length === 0) return alert('Añada al menos un paso válido con tiempo.');
+                if (steps.length === 0) return alert('La rutina debe tener al menos un paso válido.');
 
-                this.routines.push({
-                    id: 'routine-' + Date.now(),
-                    name: name,
-                    steps: steps
-                });
-                
+                this.routines.push({ id: 'routine-' + Date.now(), name: name, steps: steps });
                 this.persist();
                 router.go('menu');
             },
             delete(id) {
-                if (confirm('¿Seguro que quieres eliminar esta rutina?')) {
+                if (confirm('¿Deseas borrar esta rutina?')) {
                     this.routines = this.routines.filter(r => r.id !== id);
                     this.persist();
                     this.renderMenu();
@@ -355,13 +433,14 @@
             }
         };
 
-        // --- 3. MOTOR DEL TEMPORIZADOR Y MÁQUINA DE ESTADOS ---
+        // --- MOTOR DE EJECUCIÓN ---
         const engine = {
             activeRoutine: null,
             currentStepIndex: 0,
             timeLeft: 0,
+            totalStepTime: 0,
             timerInterval: null,
-            state: 'STOPPED', // STOPPED, RUNNING, PAUSED
+            state: 'STOPPED',
 
             setup(routineId) {
                 const routine = routineManager.routines.find(r => r.id === routineId);
@@ -374,37 +453,65 @@
                 router.go('execution');
                 this.loadStep();
                 
-                // Configurar el Botón de Codo para reaccionar al contexto
-                const btn = document.getElementById('actionBtn');
-                btn.onclick = () => this.handleElbowClick();
+                document.getElementById('actionBtn').onclick = () => {
+                    setWakeLock(true); // Activa WakeLock en la primera interacción permitida por el navegador
+                    this.handleElbowClick();
+                };
             },
             loadStep() {
                 const step = this.activeRoutine.steps[this.currentStepIndex];
+                this.timeLeft = step.time;
+                this.totalStepTime = step.time;
+                
                 document.getElementById('currentStep').textContent = `Paso ${this.currentStepIndex + 1} de ${this.activeRoutine.steps.length}`;
                 document.getElementById('instruction').textContent = step.text;
-                this.timeLeft = step.time;
+                
+                const sterileBanner = document.getElementById('sterileBanner');
+                let voicePrefix = "";
+                if (step.sterile) {
+                    sterileBanner.classList.remove('hidden');
+                    voicePrefix = "Atención, paso estéril. ";
+                } else {
+                    sterileBanner.classList.add('hidden');
+                }
+
+                const volContainer = document.getElementById('volumeContainer');
+                if (step.volume > 0) {
+                    volContainer.classList.remove('hidden');
+                    document.getElementById('volTotal').textContent = step.volume;
+                    document.getElementById('volCurrent').textContent = "0.0";
+                } else {
+                    volContainer.classList.add('hidden');
+                }
+
                 this.updateDisplay();
                 
                 const btn = document.getElementById('actionBtn');
-                btn.textContent = "INICIAR TEMPORIZADOR";
+                btn.textContent = "INICIAR CRONÓMETRO";
                 btn.className = "elbow-btn";
                 
-                // Integración de voz limpia opcional (TTS) si el navegador la soporta
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
-                    window.speechSynthesis.speak(new SpeechSynthesisUtterance(step.text));
+                    const utterance = new SpeechSynthesisUtterance(voicePrefix + step.text);
+                    window.speechSynthesis.speak(utterance);
                 }
             },
             updateDisplay() {
                 const mins = String(Math.floor(this.timeLeft / 60)).padStart(2, '0');
                 const secs = String(this.timeLeft % 60).padStart(2, '0');
                 document.getElementById('timer').textContent = `${mins}:${secs}`;
+
+                const step = this.activeRoutine.steps[this.currentStepIndex];
+                if (step.volume > 0) {
+                    const elapsed = this.totalStepTime - this.timeLeft;
+                    const infused = ((elapsed / this.totalStepTime) * step.volume).toFixed(1);
+                    document.getElementById('volCurrent').textContent = infused;
+                }
             },
             handleElbowClick() {
                 const btn = document.getElementById('actionBtn');
                 
-                if (this.state === 'STOPPED' || this.state === 'PAUSED') {
-                    // Arrancar / Continuar
+                if (this.state === 'STOPPED') {
                     this.state = 'RUNNING';
                     btn.textContent = "PASAR DE PASO (Codo)";
                     btn.className = "elbow-btn btn-success";
@@ -419,7 +526,6 @@
                         }
                     }, 1000);
                 } else if (this.state === 'RUNNING') {
-                    // Forzar paso de manera manual con el codo antes de que acabe el tiempo
                     clearInterval(this.timerInterval);
                     this.nextStep();
                 }
@@ -430,10 +536,13 @@
                     this.state = 'STOPPED';
                     this.loadStep();
                 } else {
-                    // Fin de la rutina completa
                     this.state = 'STOPPED';
+                    setWakeLock(false); // Suelta el bloqueo al terminar
+                    document.getElementById('sterileBanner').classList.add('hidden');
+                    document.getElementById('volumeContainer').classList.add('hidden');
                     document.getElementById('instruction').textContent = "¡Procedimiento Finalizado!";
                     document.getElementById('timer').textContent = "00:00";
+                    
                     const btn = document.getElementById('actionBtn');
                     btn.textContent = "VOLVER AL MENÚ";
                     btn.className = "elbow-btn";
@@ -443,10 +552,10 @@
             stop() {
                 clearInterval(this.timerInterval);
                 this.state = 'STOPPED';
+                setWakeLock(false);
             }
         };
 
-        // --- 4. INICIALIZACIÓN ---
         window.addEventListener('DOMContentLoaded', () => {
             routineManager.init();
             routineManager.clearCreatorForm();
