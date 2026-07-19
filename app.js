@@ -44,18 +44,17 @@ const voiceRecognizer = {
             const result = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
             console.log("Texto escuchado:", result);
             
-            // Comandos aceptados según idioma
             const isEs = getLang() === 'es';
             const triggerNext = isEs 
                 ? (result.includes('siguiente') || result.includes('pasar') || result.includes('continuar'))
                 : (result.includes('next') || result.includes('continue'));
 
-            if (triggerNext && engine.state === 'RUNNING') {
+            // Escucha activa tanto si está corriendo como si ya ha terminado el tiempo del paso
+            if (triggerNext && (engine.state === 'RUNNING' || engine.state === 'FINISHED')) {
                 engine.handleElbowClick();
             }
         };
 
-        // Auto-reiniciar si se corta mientras la ejecución esté activa
         this.recognition.onend = () => {
             if (this.isListening) {
                 try { this.recognition.start(); } catch(e) {}
@@ -310,14 +309,14 @@ const routineManager = {
     }
 };
 
-// Motor de Ejecución
+// Motor de Execution con tres estados robustos: STOPPED, RUNNING, FINISHED
 const engine = {
     activeRoutine: null,
     currentStepIndex: 0,
     timeLeft: 0,
     totalStepTime: 0,
     timerInterval: null,
-    state: 'STOPPED',
+    state: 'STOPPED', 
 
     setup(routineId) {
         const routine = routineManager.routines.find(r => r.id === routineId);
@@ -326,7 +325,7 @@ const engine = {
         this.currentStepIndex = 0;
         this.state = 'STOPPED';
         router.go('execution');
-        voiceRecognizer.start(); // Activamos el micrófono al empezar
+        voiceRecognizer.start(); 
         this.loadStep();
     },
     loadStep() {
@@ -380,23 +379,34 @@ const engine = {
     },
     handleElbowClick() {
         const btn = document.getElementById('actionBtn');
+        
         if (this.state === 'STOPPED') {
+            // Empezar cuenta atrás
             this.state = 'RUNNING';
             btn.textContent = t('btn_running');
             btn.className = "elbow-btn btn-success";
+            
             this.timerInterval = setInterval(() => {
                 this.timeLeft--;
                 this.updateDisplay();
+                
                 if (this.timeLeft <= 0) {
                     clearInterval(this.timerInterval);
-                    // CORRECCIÓN: No pasamos de paso automáticamente. Frenamos en 00:00 y avisamos.
+                    this.state = 'FINISHED'; // <--- Fijamos estado estático de espera
+                    
+                    // Cambiamos el botón para avisar de que espera una acción activa
+                    btn.textContent = getLang() === 'es' ? 'PASAR DE PASO (Codo / "Siguiente")' : 'NEXT STEP (Elbow / "Next")';
+                    btn.className = "elbow-btn"; 
+                    
                     if ('speechSynthesis' in window) {
-                        const msg = getLang() === 'es' ? 'Tiempo concluido.' : 'Time up.';
+                        const msg = getLang() === 'es' ? 'Tiempo concluido. Esperando confirmación.' : 'Time up. Waiting for confirmation.';
                         window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
                     }
                 }
             }, 1000);
-        } else if (this.state === 'RUNNING') {
+            
+        } else if (this.state === 'RUNNING' || this.state === 'FINISHED') {
+            // Si el usuario pulsa antes de tiempo o pulsa cuando ya ha terminado (00:00), AVANZA.
             clearInterval(this.timerInterval);
             this.nextStep();
         }
@@ -408,7 +418,7 @@ const engine = {
             this.loadStep();
         } else {
             this.state = 'STOPPED';
-            voiceRecognizer.stop(); // Fin del procedimiento, apagamos micro
+            voiceRecognizer.stop(); 
             setWakeLock(false);
             document.getElementById('sterileBanner').classList.add('hidden');
             document.getElementById('volumeContainer').classList.add('hidden');
@@ -432,7 +442,7 @@ const engine = {
 window.addEventListener('DOMContentLoaded', () => {
     translateUI();
     routineManager.init();
-    voiceRecognizer.init(); // Inicializar el micrófono
+    voiceRecognizer.init(); 
     updateOnlineStatus();
 
     window.addEventListener('online', updateOnlineStatus);
@@ -451,7 +461,11 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCancelCreator').onclick = () => router.go('menu');
     document.getElementById('reorderMenuBtn').onclick = () => routineManager.toggleReorderMode();
     document.getElementById('netStatusDot').onclick = () => document.getElementById('netStatusText').classList.toggle('hidden');
-    document.getElementById('actionBtn').onclick = () => { setWakeLock(true); engine.handleElbowClick(); };
+    
+    document.getElementById('actionBtn').onclick = () => { 
+        setWakeLock(true); 
+        engine.handleElbowClick(); 
+    };
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
