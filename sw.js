@@ -1,4 +1,4 @@
-const CACHE_NAME = 'infusion-app-v6'; // <--- v6: todo local, sin dependencias de CDN
+const CACHE_NAME = 'infusion-app-v7'; // <--- v6: todo local, sin dependencias de CDN
 const ASSETS = [
   './',
   './index.html',
