@@ -1,86 +1,78 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Infusion App</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <script src="./vendor/NoSleep.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asistente de Infusión</title>
+
+  <!-- Manifest corregido -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Icono online -->
+  <style>
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: gray; /* estado inicial */
+      display: inline-block;
+      margin-left: 10px;
+    }
+    .status-dot.online {
+      background: #00c853;
+    }
+    .status-dot.offline {
+      background: #d50000;
+    }
+  </style>
 </head>
+
 <body>
 
-    <header>
-        <div class="header-left">
-            <button id="headerNavBtn" class="btn-action btn-secondary hidden">← Volver</button>
-        </div>
-        <div class="header-right">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <div id="netStatusDot" style="width:10px; height:10px; border-radius:50%; background:gray;"></div>
-                <span id="netStatusText" class="hidden" style="font-size:0.8rem;">Online</span>
-            </div>
-            <select id="langSelector">
-                <option value="es">ES</option>
-                <option value="en">EN</option>
-            </select>
-        </div>
-    </header>
+  <!-- Indicador online/offline -->
+  <div id="onlineIcon" class="status-dot"></div>
 
-    <main>
-        <!-- VISTA MENÚ -->
-        <section id="view-menu">
-            <h1>Mis Procedimientos</h1>
-            <button id="btnNewRoutine" class="btn-action btn-primary" style="width:100%; margin-bottom:20px;">+ Nueva Rutina</button>
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <button id="reorderMenuBtn" class="btn-action btn-secondary" style="flex:1;">Reordenar Rutinas</button>
-                <button id="btnImportRoutine" class="btn-action btn-secondary" style="flex:1;">Importar archivo</button>
-            </div>
-            <input type="file" id="importFileInput" accept="application/json" class="hidden">
-            <div id="menu-routines-container"></div>
-        </section>
+  <!-- Vista menú -->
+  <div data-view="menu">
+    <h1>Asistente de Infusión</h1>
+    <button id="newRoutineBtn">Nueva rutina</button>
+    <ul id="routineList"></ul>
+  </div>
 
-        <!-- VISTA CREADOR -->
-        <section id="view-creator" class="hidden">
-            <h1 id="creatorTitle">Nueva Rutina</h1>
-            <input type="text" id="routineName" class="form-control" placeholder="Nombre de la rutina" style="width:100%; margin-bottom:20px;">
-            <div id="stepsBuilderContainer"></div>
-            <button id="btnAddStepRow" class="btn-action btn-secondary" style="width:100%; margin-top:10px;">+ Añadir Paso</button>
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button id="btnSaveRoutine" class="btn-action btn-primary" style="flex:1;">Guardar</button>
-                <button id="btnCancelCreator" class="btn-action btn-danger-ui" style="flex:1;">Cancelar</button>
-            </div>
-        </section>
+  <!-- Vista editor -->
+  <div data-view="editor" style="display:none;">
+    <h2>Editor de rutina</h2>
 
-        <!-- VISTA EJECUCIÓN -->
-        <section id="view-execution" class="hidden">
-            <h2 id="currentStep" style="text-align:center;">Paso 1 / 1</h2>
-            <div id="instruction" style="font-size:1.5rem; text-align:center; padding:20px; border:2px solid #e2e8f0; border-radius:12px; margin:20px 0;"></div>
-            
-            <div id="sterileBanner" class="hidden" style="background:#fef3c7; color:#92400e; padding:10px; text-align:center; font-weight:bold; border-radius:8px; margin-bottom:10px;">
-                ⚠️ PASO ESTÉRIL
-            </div>
+    <input id="routineName" type="text" placeholder="Nombre de la rutina">
 
-            <div id="timer" style="font-size:4rem; text-align:center; font-weight:bold; margin:20px 0;">00:00</div>
+    <div id="stepsContainer"></div>
 
-            <!-- Contenedor del volumen con la NUEVA barra de progreso -->
-            <div id="volumeContainer" class="hidden" style="margin-bottom:20px;">
-                <!-- Fallback oculto -->
-                <span id="volCurrent" class="hidden">0.0</span>
-                <span id="volTotal" class="hidden">0</span>
-                
-                <!-- Barra de Progreso Visual -->
-                <div class="progress-wrapper" style="background: #e2e8f0; border-radius: 8px; position: relative; height: 35px; overflow: hidden; border: 1px solid #cbd5e1;">
-                    <div id="volumeProgressBar" style="background: var(--success, #22c55e); width: 0%; height: 100%; transition: width 0.3s linear;"></div>
-                    <div id="volumeProgressText" style="position: absolute; width: 100%; top: 0; left: 0; text-align: center; line-height: 35px; font-weight: bold; color: #1e293b; font-size: 1.1rem;">
-                        0.0 / 0 ml
-                    </div>
-                </div>
-            </div>
+    <button id="saveRoutineBtn">Guardar rutina</button>
+    <button onclick="App.go('menu')">Volver</button>
+  </div>
 
-            <button id="actionBtn" class="elbow-btn" style="width:100%; padding:25px; font-size:1.5rem;">Iniciar</button>
-        </section>
-    </main>
+  <!-- Vista runner -->
+  <div data-view="runner" style="display:none;">
+    <h2>Ejecutando rutina</h2>
+    <div id="runnerContent"></div>
+    <button onclick="App.go('menu')">Volver</button>
+  </div>
 
-    <script type="module" src="app.js"></script>
+  <!-- Scripts -->
+  <script src="vendor/NoSleep.min.js"></script>
+  <script src="i18n.js"></script>
+  <script src="app.js"></script>
+
+  <!-- Registro CORRECTO del Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/asistente-infusion/sw.js")
+        .catch(err => console.error("SW registration failed:", err));
+    }
+  </script>
+
 </body>
 </html>
