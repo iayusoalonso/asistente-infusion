@@ -5,68 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Asistente de Infusión</title>
 
-  <!-- Manifest corregido -->
   <link rel="manifest" href="manifest.json">
-
-  <!-- Estilos -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- Icono online -->
   <style>
     .status-dot {
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      background: gray; /* estado inicial */
+      background: gray;
       display: inline-block;
       margin-left: 10px;
     }
-    .status-dot.online {
-      background: #00c853;
-    }
-    .status-dot.offline {
-      background: #d50000;
-    }
+    .status-dot.online { background: #00c853; }
+    .status-dot.offline { background: #d50000; }
   </style>
 </head>
 
 <body>
 
-  <!-- Indicador online/offline -->
   <div id="onlineIcon" class="status-dot"></div>
 
-  <!-- Vista menú -->
   <div data-view="menu">
     <h1>Asistente de Infusión</h1>
     <button id="newRoutineBtn">Nueva rutina</button>
     <ul id="routineList"></ul>
   </div>
 
-  <!-- Vista editor -->
   <div data-view="editor" style="display:none;">
     <h2>Editor de rutina</h2>
 
     <input id="routineName" type="text" placeholder="Nombre de la rutina">
-
     <div id="stepsContainer"></div>
 
     <button id="saveRoutineBtn">Guardar rutina</button>
     <button onclick="App.go('menu')">Volver</button>
   </div>
 
-  <!-- Vista runner -->
   <div data-view="runner" style="display:none;">
     <h2>Ejecutando rutina</h2>
     <div id="runnerContent"></div>
     <button onclick="App.go('menu')">Volver</button>
   </div>
 
-  <!-- Scripts -->
-  <script src="vendor/NoSleep.min.js"></script>
+  <!-- Scripts como módulos -->
   <script type="module" src="i18n.js"></script>
   <script type="module" src="app.js"></script>
 
-  <!-- Registro CORRECTO del Service Worker -->
+  <!-- Registro correcto del SW -->
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/asistente-infusion/sw.js")
