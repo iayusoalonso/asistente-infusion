@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Guía de Infusión Autónoma</title>
+    
+    <!-- Configuración para Web App Autónoma (PWA/Offline) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --primary-active: #1d4ed8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --font-stack: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding: 16px;
+        }
+
+        /* Cabecera de la Aplicación */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+        }
+
+        .app-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-indicators {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-online { background-color: #e2fbf0; color: #065f46; }
+        .badge-offline { background-color: #fee2e2; color: #991b1b; }
+        .badge-wakelock { background-color: #eff6ff; color: #1e40af; }
+
+        /* Contenedor Principal / Panel de Control */
+        .main-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Pantalla de Estado del Proceso */
+        .display-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
+            min-height: 200px;
+        }
+
+        .step-indicator {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .instruction-text {
+            font-size: 1.4rem;
+            font-weight: 600;
+            line-height: 1.4;
+            color: var(--text-main);
+            margin-bottom: 16px;
+        }
+
+        .timer-display {
+            font-size: 4.5rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-main);
+            line-height: 1;
+            margin: 8px 0;
+        }
+
+        /* Botón de Codo Gigante (Optimizado para pulsaciones fáciles) */
+        .elbow-btn {
+            width: 100%;
+            min-height: 140px;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 24px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background 0.1s ease, transform 0.05s ease;
+            box-shadow: 0 8px 0px var(--primary-active), 0 12px 20px rgba(37, 99, 235, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            user-select: none;
+        }
+
+        .elbow-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0px var(--primary-active), 0 4px 10px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Estado de Alerta/Pausa */
+        .elbow-btn.btn-danger {
+            background: var(--danger);
+            box-shadow: 0 8px 0px #b91c1c, 0 12px 20px rgba(239, 68, 68, 0.3);
+        }
+        .elbow-btn.btn-danger:active {
+            box-shadow: 0 2px 0px #b91c1c, 0 4px 10px rgba(239, 68, 68, 0.2);
+        }
+
+        /* Elementos ocultos para el Hack de NoSleep */
+        .hidden-media {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Cabecera e Indicadores de Estado -->
+    <header class="app-header">
+        <div class="app-title">Infusión Control</div>
+        <div class="status-indicators">
+            <span id="netStatus" class="badge badge-online">En Línea</span>
+            <span id="wakeStatus" class="badge badge-wakelock">Pantalla ON</span>
+        </div>
+    </header>
+
+    <!-- Panel de Control Principal -->
+    <main class="main-panel">
+        
+        <!-- Tarjeta de Visualización de Tiempos y Pasos -->
+        <section class="display-card" aria-live="polite">
+            <div id="currentStep" class="step-indicator">Paso 1 de 5</div>
+            <h1 id="instruction" class="instruction-text">Prepare el entorno antes de iniciar</h1>
+            <div id="timer" class="timer-display">00:00</div>
+        </section>
+
+        <!-- Botón de Gran Tamaño para Activación con el Codo -->
+        <button id="actionBtn" class="elbow-btn" type="button">
+            CONFIRMAR e INICIAR
+        </button>
+
+    </main>
+
+    <!-- Contenedor técnico para los elementos de video ocultos (NoSleep base64 fallbacks) -->
+    <div class="hidden-media" aria-hidden="true">
+        <video id="fallbackVideoWebm" loop playsinline muted></video>
+        <video id="fallbackVideoMp4" loop playsinline muted></video>
+    </div>
+
+    <!-- El script con la lógica de control, timers y el "corazón" del JS iría justo aquí abajo -->
+    <script>
+        // Aquí se inyecta la lógica de inicialización, NoSleep, Web Speech API y la máquina de estados.
+    </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "Asistente de Infusión",
+  "short_name": "Asistente",
+  "description": "Guía interactiva offline con temporizadores y control por voz.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#1f1f1f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3063/3063822.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
